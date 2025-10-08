@@ -1,0 +1,78 @@
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+class Pedido_model extends CI_Model {
+
+    /**
+     * Crear pedido
+     * @param int $id_cliente
+     * @param array $detalle
+     * @param int|null $id_mesa
+     * @param int|null $id_sucursal
+     * @return int|false id_pedido o FALSE
+     */
+    public function crear_pedido($id_cliente, $detalle, $id_mesa = NULL, $id_sucursal = NULL) {
+        $this->db->trans_start();
+
+        $total = 0;
+        foreach ($detalle as $item) {
+            $total += $item['subtotal'];
+        }
+
+        $insert = [
+            'id_cliente' => $id_cliente,
+            'estado' => 'Pendiente',
+            'total' => $total
+        ];
+
+        // incluir id_mesa si se proporciona
+        if (!is_null($id_mesa)) {
+            $insert['id_mesa'] = $id_mesa;
+        }
+
+        // incluir id_sucursal si se proporciona
+        if (!is_null($id_sucursal)) {
+            $insert['id_sucursal'] = $id_sucursal;
+        }
+
+        $this->db->insert('pedidos', $insert);
+
+        $id_pedido = $this->db->insert_id();
+
+        foreach ($detalle as $item) {
+            $this->db->insert('detalle_pedido', [
+                'id_pedido' => $id_pedido,
+                'id_producto' => $item['id_producto'],
+                'cantidad' => $item['cantidad'],
+                'subtotal' => $item['subtotal']
+            ]);
+        }
+
+        $this->db->trans_complete();
+
+        return $this->db->trans_status() ? $id_pedido : FALSE;
+    }
+
+    public function obtener_pedidos_pendientes($id_sucursal = null) {
+        $this->db->where('estado', 'Pendiente');
+        if ($id_sucursal !== null) {
+            $this->db->where('id_sucursal', $id_sucursal);
+        }
+        return $this->db->order_by('fecha', 'DESC')
+                        ->get('pedidos')
+                        ->result();
+    }
+
+    public function obtener_detalle_pedido($id_pedido) {
+        $this->db->select('p.nombre, p.precio, d.cantidad, d.subtotal');
+        $this->db->from('detalle_pedido d');
+        $this->db->join('productos p', 'p.id_producto = d.id_producto');
+        $this->db->where('d.id_pedido', $id_pedido);
+        return $this->db->get()->result();
+    }
+
+    public function actualizar_estado($id_pedido, $nuevo_estado) {
+        $this->db->where('id_pedido', $id_pedido);
+        return $this->db->update('pedidos', ['estado' => $nuevo_estado]);
+    }
+}
