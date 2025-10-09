@@ -41,12 +41,13 @@ class Usuarios extends CI_Controller {
         // Validaciones
         if(empty($usuario) || empty($contrasena) || empty($nombre_completo) || empty($rol)) {
             echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
-            return;
+            exit;
         }
 
-        if($rol == 'admin_sucursal' && empty($id_sucursal)) {
-            echo json_encode(['success' => false, 'message' => 'Debe seleccionar una sucursal para admin de sucursal']);
-            return;
+        // Validar que admin_sucursal y usuario requieran sucursal
+        if(($rol == 'admin_sucursal' || $rol == 'usuario') && empty($id_sucursal)) {
+            echo json_encode(['success' => false, 'message' => 'Debe seleccionar una sucursal para este rol']);
+            exit;
         }
 
         // Verificar si el usuario ya existe
@@ -67,7 +68,7 @@ class Usuarios extends CI_Controller {
             'nombre_completo' => $nombre_completo,
             'email' => $email,
             'rol' => $rol,
-            'id_sucursal' => ($rol == 'admin_sucursal') ? $id_sucursal : null,
+            'id_sucursal' => ($rol == 'admin_sucursal' || $rol == 'usuario') ? $id_sucursal : null,
             'activo' => true
         ];
 
@@ -96,12 +97,13 @@ class Usuarios extends CI_Controller {
         // Validaciones
         if(empty($id) || empty($usuario) || empty($nombre_completo) || empty($rol)) {
             echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
-            return;
+            exit;
         }
 
-        if($rol == 'admin_sucursal' && empty($id_sucursal)) {
-            echo json_encode(['success' => false, 'message' => 'Debe seleccionar una sucursal para admin de sucursal']);
-            return;
+        // Validar que admin_sucursal y usuario requieran sucursal
+        if(($rol == 'admin_sucursal' || $rol == 'usuario') && empty($id_sucursal)) {
+            echo json_encode(['success' => false, 'message' => 'Debe seleccionar una sucursal para este rol']);
+            exit;
         }
 
         // Verificar si el usuario ya existe (excepto el actual)
@@ -121,7 +123,7 @@ class Usuarios extends CI_Controller {
             'nombre_completo' => $nombre_completo,
             'email' => $email,
             'rol' => $rol,
-            'id_sucursal' => ($rol == 'admin_sucursal') ? $id_sucursal : null
+            'id_sucursal' => ($rol == 'admin_sucursal' || $rol == 'usuario') ? $id_sucursal : null
         ];
 
         // Solo agregar contraseña si se proporciona una nueva

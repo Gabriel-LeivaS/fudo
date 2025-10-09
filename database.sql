@@ -1,7 +1,8 @@
 -- ============================================================
 -- FUDO - Base de datos Sistema Multi-Sucursal
--- Fecha: 8 de octubre de 2025
+-- Fecha: 9 de octubre de 2025
 -- Descripción: Base de datos completa con soporte multi-sucursal
+--              Incluye 3 roles: admin, admin_sucursal y usuario
 -- ============================================================
 
 -- Crear base de datos
@@ -33,6 +34,10 @@ INSERT INTO sucursales (nombre, direccion, telefono, email) VALUES
 
 -- ============================================================
 -- PASO 2: Tabla usuarios_admin
+-- Roles disponibles:
+--   * admin: Super administrador con acceso total al sistema
+--   * admin_sucursal: Administrador de sucursal con permisos de gestión operativa
+--   * usuario: Usuario con permisos de solo lectura (visualización)
 -- ============================================================
 CREATE TABLE usuarios_admin (
     id SERIAL PRIMARY KEY,
@@ -40,7 +45,7 @@ CREATE TABLE usuarios_admin (
     contrasena TEXT NOT NULL, -- usar crypt()
     nombre_completo VARCHAR(100) NOT NULL,
     email VARCHAR(100),
-    rol VARCHAR(20) NOT NULL DEFAULT 'admin_sucursal', -- 'admin' o 'admin_sucursal'
+    rol VARCHAR(20) NOT NULL DEFAULT 'admin_sucursal', -- 'admin', 'admin_sucursal' o 'usuario'
     id_sucursal INT REFERENCES sucursales(id_sucursal) ON DELETE SET NULL,
     activo BOOLEAN DEFAULT TRUE,
     fecha_creacion TIMESTAMP DEFAULT NOW()
@@ -61,6 +66,14 @@ VALUES ('admin_norte', crypt('norte123', gen_salt('bf')), 'Admin Norte', 'admin.
 -- Admin Sucursal Sur
 INSERT INTO usuarios_admin (usuario, contrasena, nombre_completo, email, rol, id_sucursal)
 VALUES ('admin_sur', crypt('sur123', gen_salt('bf')), 'Admin Sur', 'admin.sur@fudo.cl', 'admin_sucursal', 3);
+
+-- Usuario Solo Lectura - Sucursal Centro
+INSERT INTO usuarios_admin (usuario, contrasena, nombre_completo, email, rol, id_sucursal)
+VALUES ('usuario_centro', crypt('centro123', gen_salt('bf')), 'Usuario Centro', 'usuario.centro@fudo.cl', 'usuario', 1);
+
+-- Usuario Solo Lectura - Sucursal Norte
+INSERT INTO usuarios_admin (usuario, contrasena, nombre_completo, email, rol, id_sucursal)
+VALUES ('usuario_norte', crypt('norte123', gen_salt('bf')), 'Usuario Norte', 'usuario.norte@fudo.cl', 'usuario', 2);
 
 -- ============================================================
 -- PASO 3: Tabla categorias
@@ -114,6 +127,7 @@ INSERT INTO productos (id_categoria, id_sucursal, nombre, descripcion, precio, d
 CREATE TABLE clientes (
     id_cliente SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
+    rut VARCHAR(15) UNIQUE,
     telefono VARCHAR(20),
     email VARCHAR(100),
     fecha_registro TIMESTAMP DEFAULT NOW()
@@ -224,4 +238,10 @@ ORDER BY s.id_sucursal;
 \echo ''
 \echo 'Admin Sucursal Mall Sur:'
 \echo '  Usuario: admin_sur | Contraseña: sur123'
+\echo ''
+\echo 'Usuario Solo Lectura - Centro:'
+\echo '  Usuario: usuario_centro | Contraseña: centro123'
+\echo ''
+\echo 'Usuario Solo Lectura - Norte:'
+\echo '  Usuario: usuario_norte | Contraseña: norte123'
 \echo '============================================================'

@@ -67,4 +67,18 @@ class Carta extends CI_Controller {
         $data['productos'] = $this->Producto_model->obtener_por_categoria($id_categoria, $id_sucursal);
         $this->load->view('carta/productos', $data);
     }
+
+    /**
+     * Verificar disponibilidad de un producto (AJAX)
+     */
+    public function verificar_disponibilidad($id_producto) {
+        $disponible = $this->Producto_model->esta_disponible($id_producto);
+        $producto = $this->Producto_model->obtener_por_id($id_producto);
+        
+        header('Content-Type: application/json');
+        echo json_encode([
+            'disponible' => $disponible,
+            'nombre' => $producto ? $producto->nombre : 'Producto desconocido'
+        ]);
+    }
 }

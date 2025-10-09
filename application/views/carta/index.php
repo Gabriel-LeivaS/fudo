@@ -185,7 +185,7 @@
         
         <div class="form-group">
           <label class="form-label" for="customerRut">RUT *</label>
-          <input type="text" id="customerRut" class="form-input" placeholder="Ej: 12.345.678-9" required maxlength="12" />
+          <input type="text" id="customerRut" class="form-input" placeholder="Ej: 12.345.678-9" required maxlength="15" autocomplete="off" />
           <div class="form-help" id="rutError">Por favor ingresa un RUT válido</div>
         </div>
         
@@ -290,8 +290,24 @@
       showToast('Carrito vaciado', 1400, 'info');
     }
 
-    function agregarCarrito(id,nombre,precio,srcEl=null){ 
+    async function agregarCarrito(id,nombre,precio,srcEl=null){ 
       console.log('[FUDO DEBUG] agregarCarrito llamado:', {id, nombre, precio});
+      
+      // Verificar disponibilidad del producto antes de agregar
+      try {
+        const response = await fetch(`<?= site_url('carta/verificar_disponibilidad') ?>/${id}`);
+        const data = await response.json();
+        
+        if (!data.disponible) {
+          showToast(`⚠️ ${nombre} ya no está disponible`, 2500, 'warning');
+          console.log('[FUDO DEBUG] Producto no disponible:', nombre);
+          return;
+        }
+      } catch (error) {
+        console.error('[FUDO DEBUG] Error al verificar disponibilidad:', error);
+        // Si falla la verificación, continuar (para no bloquear en caso de error de red)
+      }
+      
       let item = carrito.find(i=>i.id_producto===id); 
       if(!item) {
         carrito.push({ id_producto:id, nombre:nombre, precio:precio, cantidad:1, subtotal:precio });
@@ -426,11 +442,25 @@
       // Añadimos resiliencia: intentamos enviar JSON, si falla (backend que espera POST form), reintentamos con FormData
       try{
         if(btn){ btn.classList.add('pop'); setTimeout(()=>btn.classList.remove('pop'),260); }
+        
+        const id_mesa = <?= json_encode($this->session->userdata('id_mesa') ?? null) ?>;
+        const id_sucursal = <?= json_encode($this->session->userdata('id_sucursal') ?? null) ?>;
+        
         const payload = { 
-          id_mesa: <?= json_encode($this->session->userdata('id_mesa') ?? null) ?>, 
+          id_mesa: id_mesa,
+          id_sucursal: id_sucursal,
           detalle: carrito.map(i=>({ id_producto:i.id_producto, cantidad:i.cantidad, subtotal:i.subtotal })),
-          cliente: customerData
+          cliente_nombre: customerData.nombre,
+          cliente_rut: customerData.rut,
+          cliente_telefono: customerData.telefono,
+          cliente_email: customerData.email,
+          cliente_notas: customerData.notas || ''
         };
+        
+        console.log('[FUDO DEBUG] Payload a enviar:', payload);
+        console.log('[FUDO DEBUG] Payload.detalle:', payload.detalle);
+        console.log('[FUDO DEBUG] Carrito actual:', carrito);
+        console.log('[FUDO DEBUG] JSON.stringify(payload):', JSON.stringify(payload));
 
         // Intento 1: JSON
         try{
@@ -443,27 +473,74 @@
 
           // Intentar parsear JSON; si falla, lanzamos para activar el fallback
           const text = await res.text();
+          console.log('[FUDO DEBUG] Respuesta del servidor:', text);
+          console.log('[FUDO DEBUG] Respuesta length:', text.length);
+          console.log('[FUDO DEBUG] Primeros caracteres:', text.substring(0, 50));
+          
           let json;
-          try{ json = text ? JSON.parse(text) : null; }
-          catch(parseErr){ throw new Error('no-json'); }
+          try{ 
+            // Limpiar posibles BOM o espacios
+            const cleanText = text.trim().replace(/^\uFEFF/, '');
+            json = cleanText ? JSON.parse(cleanText) : null; 
+          }
+          catch(parseErr){ 
+            console.error('[FUDO DEBUG] Error parseando JSON:', parseErr);
+            console.error('[FUDO DEBUG] Texto recibido completo:', text);
+            
+            // Intentar detectar si hay JSON dentro de HTML o texto extra
+            const jsonMatch = text.match(/\{.*\}/s);
+            if(jsonMatch) {
+              console.log('[FUDO DEBUG] JSON encontrado en el texto:', jsonMatch[0]);
+              try {
+                json = JSON.parse(jsonMatch[0]);
+                console.log('[FUDO DEBUG] JSON extraído y parseado exitosamente');
+              } catch(e) {
+                console.error('[FUDO DEBUG] No se pudo parsear JSON extraído');
+                throw new Error('no-json');
+              }
+            } else {
+              throw new Error('no-json');
+            }
+          }
 
           if(json && json.ok){
-            showToast('Pedido creado. ID: ' + json.id_pedido, 2400, 'success');
+            showToast('✅ Pedido creado exitosamente. ID: ' + json.id_pedido, 3000, 'success');
             carrito = []; try{ localStorage.removeItem(CART_KEY); }catch(e){}
             renderCart();
             return;
           }
 
-          // Si el backend devolvió JSON con ok=false, mostramos el error
-          if(json && !json.ok){ showToast('Error al crear pedido: ' + (json.error||'desconocido'), 4000, 'danger'); return; }
+          // Si el backend devolvió error de productos no disponibles
+          if(json && json.error){
+            console.error('[FUDO DEBUG] Error del servidor:', json.error);
+            if(json.productos_no_disponibles && json.productos_no_disponibles.length > 0) {
+              showToast('⚠️ ' + json.error, 4500, 'warning');
+              // Eliminar productos no disponibles del carrito
+              carrito = carrito.filter(item => {
+                const producto = json.productos_no_disponibles.find(p => item.nombre.includes(p));
+                return !producto;
+              });
+              saveCart();
+            } else if(json.productos_sin_stock && json.productos_sin_stock.length > 0) {
+              // Error de stock insuficiente
+              showToast('⚠️ ' + json.error, 5000, 'warning');
+              console.log('[FUDO DEBUG] Productos sin stock:', json.productos_sin_stock);
+            } else {
+              showToast('Error al crear pedido: ' + json.error, 4000, 'danger');
+            }
+            return;
+          }
 
           // Si llegamos aquí y no hay json, forzamos fallback
           throw new Error('fallback');
         }catch(errJson){
           // Fallback: enviar como FormData (backend que espera campos POST tradicionales)
           try{
+            console.log('[FUDO DEBUG] Entrando al fallback FormData');
+            
             const form = new URLSearchParams();
-            form.append('id_mesa', payload.id_mesa || '');
+            form.append('id_mesa', id_mesa || '');
+            form.append('id_sucursal', id_sucursal || '');
             form.append('detalle', JSON.stringify(payload.detalle));
             form.append('cliente_nombre', customerData.nombre);
             form.append('cliente_rut', customerData.rut);
@@ -473,22 +550,49 @@
 
             const res2 = await fetch('<?= site_url('pedidos/crear') ?>',{
               method: 'POST',
-              headers: { 'X-Requested-With': 'XMLHttpRequest' },
+              headers: { 
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest' 
+              },
               body: form,
               credentials: 'same-origin'
             });
+            
             const txt = await res2.text();
+            console.log('[FUDO DEBUG] Respuesta fallback:', txt);
+            console.log('[FUDO DEBUG] Status fallback:', res2.status);
+            
             let json2 = null;
-            try{ json2 = txt ? JSON.parse(txt) : null; } catch(e){ /* backend devolvió texto plano */ }
+            try{ json2 = txt ? JSON.parse(txt) : null; } catch(e){ 
+              console.error('[FUDO DEBUG] Fallback: No se pudo parsear JSON:', e);
+              console.error('[FUDO DEBUG] Fallback: Texto recibido:', txt);
+            }
 
-            if(json2 && json2.ok){ showToast('Pedido creado. ID: ' + json2.id_pedido, 2400, 'success'); carrito = []; try{ localStorage.removeItem(CART_KEY); }catch(e){} renderCart(); return; }
+            if(json2 && json2.ok){ 
+              showToast('✅ Pedido creado exitosamente. ID: ' + json2.id_pedido, 3000, 'success'); 
+              carrito = []; 
+              try{ localStorage.removeItem(CART_KEY); }catch(e){} 
+              renderCart(); 
+              return; 
+            }
+            
             // Si no hay JSON, pero HTTP 200 y texto, asumimos éxito (por compatibilidad)
-            if(res2.ok){ showToast('Pedido enviado (respuesta no-JSON del servidor).', 2600, 'success'); carrito = []; try{ localStorage.removeItem(CART_KEY); }catch(e){} renderCart(); return; }
+            if(res2.ok && txt.includes('"ok"')){ 
+              showToast('✅ Pedido creado exitosamente', 3000, 'success'); 
+              carrito = []; 
+              try{ localStorage.removeItem(CART_KEY); }catch(e){} 
+              renderCart(); 
+              return; 
+            }
 
             // Finalmente mostramos error
-            showToast('Error al crear pedido (fallback): ' + (json2 && json2.error ? json2.error : txt || 'desconocido'), 4500, 'danger');
+            showToast('❌ Error al crear pedido: ' + (json2 && json2.error ? json2.error : txt || 'desconocido'), 4500, 'danger');
             return;
-          }catch(errFallback){ console.error('fallback error', errFallback); showToast('Error al enviar pedido (intento fallback falló)', 3600, 'danger'); return; }
+          }catch(errFallback){ 
+            console.error('[FUDO DEBUG] Error en fallback:', errFallback); 
+            showToast('❌ Error al enviar pedido (intento fallback falló)', 3600, 'danger'); 
+            return; 
+          }
         }
 
       }catch(e){ console.error(e); showToast('Error al enviar pedido', 3500, 'danger'); }
@@ -517,6 +621,10 @@
         el.style.background='#ffecec'; 
         el.style.color='#7a1515'; 
         el.style.border='1px solid rgba(200,50,50,0.25)'; 
+      } else if(type==='warning'){ 
+        el.style.background='#fff8e1'; 
+        el.style.color='#f57c00'; 
+        el.style.border='1px solid rgba(255,152,0,0.35)'; 
       } else { 
         el.style.background='#ffffff'; 
         el.style.color='#333'; 
@@ -645,16 +753,50 @@
         };
         
         // Auto-format RUT on input
+        let isFormatting = false;
+        
         rutInput.addEventListener('input', function(e) {
+          if(isFormatting) return;
+          
+          isFormatting = true;
+          
           const cursorPos = this.selectionStart;
           const oldValue = this.value;
-          const formatted = formatRut(this.value);
+          
+          // Get raw value (only numbers and K)
+          let rawValue = oldValue.replace(/[^0-9kK]/g, '').toUpperCase();
+          
+          // Don't format if empty
+          if(rawValue.length === 0) {
+            this.value = '';
+            isFormatting = false;
+            return;
+          }
+          
+          // Format the RUT
+          let formatted = '';
+          if(rawValue.length > 1) {
+            let body = rawValue.slice(0, -1);
+            let verifier = rawValue.slice(-1);
+            
+            // Add dots to body
+            body = body.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            formatted = `${body}-${verifier}`;
+          } else {
+            formatted = rawValue;
+          }
+          
           this.value = formatted;
           
-          // Adjust cursor position
-          if(formatted.length > oldValue.length) {
-            this.setSelectionRange(cursorPos + 1, cursorPos + 1);
+          // Calculate new cursor position
+          let newCursorPos = cursorPos;
+          if(formatted.length > oldValue.length && (formatted[cursorPos - 1] === '.' || formatted[cursorPos - 1] === '-')) {
+            newCursorPos = cursorPos + 1;
           }
+          
+          this.setSelectionRange(newCursorPos, newCursorPos);
+          
+          isFormatting = false;
         });
         
         // Reset form

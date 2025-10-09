@@ -14,14 +14,24 @@ class Cocina extends CI_Controller {
         if(!$this->session->userdata('logueado')) {
             redirect('login');
         }
+        
+        // Cargar información del usuario si está logueado
+        $this->rol = $this->session->userdata('rol');
+        $this->id_sucursal = $this->session->userdata('id_sucursal');
     }
 
-    public function index() {
-        $this->load->view('admin/panel_cocina');
+    public function index($id_pedido = null) {
+        $data = [];
+        if($id_pedido) {
+            $data['id_pedido_inicial'] = $id_pedido;
+        }
+        $this->load->view('admin/panel_cocina', $data);
     }
 
     public function pendientes_json() {
-        $pedidos = $this->Pedido_model->obtener_pedidos_pendientes();
+        // Si es admin_sucursal o usuario, filtrar por su sucursal
+        $id_sucursal = ($this->rol == 'admin_sucursal' || $this->rol == 'usuario') ? $this->id_sucursal : null;
+        $pedidos = $this->Pedido_model->obtener_pedidos_pendientes($id_sucursal);
         echo json_encode($pedidos);
     }
 

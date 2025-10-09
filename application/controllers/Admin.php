@@ -23,10 +23,64 @@ class Admin extends CI_Controller {
     }
 
     public function index() {
-        // Filtrar pedidos por sucursal si es admin_sucursal
+        // Si es super admin, redirigir a categorías (no debe ver pedidos)
+        if($this->rol == 'admin') {
+            redirect('admin/categorias');
+            return;
+        }
+
+        // Permitir acceso a admin_sucursal y usuario
+        if($this->rol != 'admin_sucursal' && $this->rol != 'usuario') {
+            show_error('No tienes permisos para acceder a esta sección', 403);
+            return;
+        }
+
+        // Si es usuario, redirigir a categorías (solo lectura)
+        if($this->rol == 'usuario') {
+            redirect('admin/categorias');
+            return;
+        }
+        
+        // Si es admin_sucursal, mostrar pedidos de su sucursal
         $id_sucursal = ($this->rol == 'admin_sucursal') ? $this->id_sucursal : null;
         $data['pedidos'] = $this->Pedido_model->obtener_pedidos_pendientes($id_sucursal);
         $this->load->view('admin/pedidos', $data);
+    }
+
+    public function obtener_pedidos_ajax() {
+        // Endpoint AJAX para actualización automática de pedidos
+        header('Content-Type: application/json');
+        
+        // Solo admin_sucursal puede acceder
+        if($this->rol != 'admin_sucursal') {
+            echo json_encode(['error' => 'No autorizado']);
+            return;
+        }
+        
+        $pedidos = $this->Pedido_model->obtener_pedidos_pendientes($this->id_sucursal);
+        echo json_encode(['pedidos' => $pedidos]);
+    }
+
+    public function detalle_pedido_json($id_pedido) {
+        header('Content-Type: application/json');
+        
+        // Obtener información del pedido
+        $pedido = $this->db->get_where('pedidos', ['id_pedido' => $id_pedido])->row();
+        
+        if(!$pedido) {
+            echo json_encode(['error' => 'Pedido no encontrado']);
+            return;
+        }
+        
+        // Obtener detalle de productos
+        $detalle = $this->Pedido_model->obtener_detalle_pedido($id_pedido);
+        
+        $response = [
+            'pedido' => $pedido,
+            'detalle' => $detalle
+        ];
+        
+        echo json_encode($response);
     }
 
     public function detalle($id_pedido) {
@@ -35,6 +89,12 @@ class Admin extends CI_Controller {
     }
 
     public function actualizar_estado() {
+        // Validar permisos de escritura
+        if($this->rol == 'usuario') {
+            echo json_encode(['error' => 'No tiene permisos para modificar pedidos']);
+            return;
+        }
+
         $data = json_decode($this->input->raw_input_stream, TRUE);
         if(!isset($data['id_pedido']) || !isset($data['estado'])){
             echo json_encode(['error'=>'Datos incompletos']);
@@ -62,6 +122,13 @@ class Admin extends CI_Controller {
     }
 
     public function categoria_crear() {
+        // Validar permisos de escritura
+        if($this->rol == 'usuario') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'No tiene permisos para crear categorías']);
+            return;
+        }
+
         header('Content-Type: application/json');
         $nombre = trim($this->input->post('nombre'));
         $id_sucursal_form = $this->input->post('id_sucursal');
@@ -98,6 +165,13 @@ class Admin extends CI_Controller {
     }
 
     public function categoria_editar() {
+        // Validar permisos de escritura
+        if($this->rol == 'usuario') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'No tiene permisos para editar categorías']);
+            return;
+        }
+
         header('Content-Type: application/json');
         $id = $this->input->post('id_categoria');
         $nombre = trim($this->input->post('nombre'));
@@ -126,6 +200,13 @@ class Admin extends CI_Controller {
     }
 
     public function categoria_eliminar() {
+        // Validar permisos de escritura
+        if($this->rol == 'usuario') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'No tiene permisos para eliminar categorías']);
+            return;
+        }
+
         header('Content-Type: application/json');
         $id = $this->input->post('id_categoria');
         
@@ -157,9 +238,19 @@ class Admin extends CI_Controller {
     }
 
     public function categoria_toggle_estado() {
+        // Validar permisos de escritura
+        if($this->rol == 'usuario') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'No tiene permisos para modificar categorías']);
+            return;
+        }
+
         header('Content-Type: application/json');
         $id = $this->input->post('id_categoria');
-        $estado = $this->input->post('estado') === 'true' || $this->input->post('estado') === '1';
+        $estado_post = $this->input->post('estado');
+        
+        // Convertir correctamente el estado string a booleano
+        $estado = ($estado_post === 'true' || $estado_post === true || $estado_post === '1' || $estado_post === 1);
         
         if(empty($id)) {
             echo json_encode(['success' => false, 'message' => 'ID de categoría no proporcionado']);
@@ -174,13 +265,10 @@ class Admin extends CI_Controller {
                 return;
             }
         }
-        if(empty($id)) {
-            echo json_encode(['success' => false, 'message' => 'ID de categoría no proporcionado']);
-            return;
-        }
 
         if($this->Categoria_model->cambiar_estado($id, $estado)) {
-            echo json_encode(['success' => true, 'message' => 'Estado actualizado']);
+            $mensaje = $estado ? 'Categoría activada correctamente' : 'Categoría desactivada correctamente';
+            echo json_encode(['success' => true, 'message' => $mensaje]);
         } else {
             echo json_encode(['success' => false, 'message' => 'Error al actualizar el estado']);
         }
@@ -205,12 +293,20 @@ class Admin extends CI_Controller {
     }
 
     public function producto_crear() {
+        // Validar permisos de escritura
+        if($this->rol == 'usuario') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'No tiene permisos para crear productos']);
+            return;
+        }
+
         header('Content-Type: application/json');
         $nombre = trim($this->input->post('nombre'));
         $descripcion = trim($this->input->post('descripcion'));
         $precio = $this->input->post('precio');
         $id_categoria = $this->input->post('id_categoria');
         $id_sucursal_form = $this->input->post('id_sucursal');
+        $stock = $this->input->post('stock') ?? 0;
         
         if(empty($nombre) || empty($precio) || empty($id_categoria)) {
             echo json_encode(['success' => false, 'message' => 'Datos incompletos (nombre, precio y categoría son obligatorios)']);
@@ -219,6 +315,11 @@ class Admin extends CI_Controller {
 
         if(!is_numeric($precio) || $precio < 0) {
             echo json_encode(['success' => false, 'message' => 'El precio debe ser un número válido']);
+            return;
+        }
+
+        if(!is_numeric($stock) || $stock < 0) {
+            echo json_encode(['success' => false, 'message' => 'El stock debe ser un número válido']);
             return;
         }
 
@@ -241,7 +342,8 @@ class Admin extends CI_Controller {
             'precio' => $precio,
             'id_categoria' => $id_categoria,
             'id_sucursal' => $id_sucursal_final,
-            'disponible' => true
+            'disponible' => true,
+            'stock' => (int)$stock
         ];
 
         if($this->Producto_model->crear($datos)) {
@@ -252,12 +354,20 @@ class Admin extends CI_Controller {
     }
 
     public function producto_editar() {
+        // Validar permisos de escritura
+        if($this->rol == 'usuario') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'No tiene permisos para editar productos']);
+            return;
+        }
+
         header('Content-Type: application/json');
         $id = $this->input->post('id_producto');
         $nombre = trim($this->input->post('nombre'));
         $descripcion = trim($this->input->post('descripcion'));
         $precio = $this->input->post('precio');
         $id_categoria = $this->input->post('id_categoria');
+        $stock = $this->input->post('stock') ?? 0;
         
         if(empty($id) || empty($nombre) || empty($precio) || empty($id_categoria)) {
             echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
@@ -266,6 +376,11 @@ class Admin extends CI_Controller {
 
         if(!is_numeric($precio) || $precio < 0) {
             echo json_encode(['success' => false, 'message' => 'El precio debe ser un número válido']);
+            return;
+        }
+
+        if(!is_numeric($stock) || $stock < 0) {
+            echo json_encode(['success' => false, 'message' => 'El stock debe ser un número válido']);
             return;
         }
 
@@ -282,7 +397,8 @@ class Admin extends CI_Controller {
             'nombre' => $nombre,
             'descripcion' => $descripcion,
             'precio' => $precio,
-            'id_categoria' => $id_categoria
+            'id_categoria' => $id_categoria,
+            'stock' => (int)$stock
         ];
 
         if($this->Producto_model->actualizar($id, $datos)) {
@@ -293,6 +409,13 @@ class Admin extends CI_Controller {
     }
 
     public function producto_eliminar() {
+        // Validar permisos de escritura
+        if($this->rol == 'usuario') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'No tiene permisos para eliminar productos']);
+            return;
+        }
+
         header('Content-Type: application/json');
         $id = $this->input->post('id_producto');
         
@@ -318,9 +441,19 @@ class Admin extends CI_Controller {
     }
 
     public function producto_toggle_disponibilidad() {
+        // Validar permisos de escritura
+        if($this->rol == 'usuario') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'No tiene permisos para modificar productos']);
+            return;
+        }
+
         header('Content-Type: application/json');
         $id = $this->input->post('id_producto');
-        $disponible = $this->input->post('disponible') === 'true' || $this->input->post('disponible') === '1';
+        $disponible_post = $this->input->post('disponible');
+        
+        // Convertir correctamente el estado string a booleano
+        $disponible = ($disponible_post === 'true' || $disponible_post === true || $disponible_post === '1' || $disponible_post === 1);
         
         if(empty($id)) {
             echo json_encode(['success' => false, 'message' => 'ID de producto no proporcionado']);
@@ -337,7 +470,8 @@ class Admin extends CI_Controller {
         }
 
         if($this->Producto_model->cambiar_disponibilidad($id, $disponible)) {
-            echo json_encode(['success' => true, 'message' => 'Disponibilidad actualizada']);
+            $mensaje = $disponible ? 'Producto activado correctamente' : 'Producto desactivado correctamente';
+            echo json_encode(['success' => true, 'message' => $mensaje]);
         } else {
             echo json_encode(['success' => false, 'message' => 'Error al actualizar la disponibilidad']);
         }
@@ -495,17 +629,32 @@ class Admin extends CI_Controller {
             return;
         }
 
-        // Obtener categorías y productos de la sucursal del admin
-        $data['categorias'] = $this->Categoria_model->obtener_todas($this->id_sucursal);
+        // Cargar modelo de sucursales para obtener todos los datos
+        $this->load->model('Sucursal_model');
+        
+        // Obtener datos completos de la sucursal
+        $sucursal = $this->Sucursal_model->obtener_por_id($this->id_sucursal);
+        
+        // Crear objeto mesa simulado con datos de sucursal para compatibilidad con la vista
+        $mesa = new stdClass();
+        $mesa->nombre_sucursal = $sucursal->nombre ?? 'Sucursal';
+        $mesa->direccion = $sucursal->direccion ?? 'Dirección no disponible';
+        $mesa->telefono = $sucursal->telefono ?? 'Teléfono no disponible';
+        
+        $data['mesa'] = $mesa;
+        $data['id_mesa'] = 0; // No aplica para admin
+
+        // Obtener categorías activas de la sucursal del admin
+        $data['categorias'] = $this->Categoria_model->obtener_categorias_activas($this->id_sucursal);
         
         // Obtener productos agrupados por categoría
         $productos_por_categoria = [];
         foreach($data['categorias'] as $cat) {
-            $productos_por_categoria[$cat->id_categoria] = $this->Producto_model->obtener_por_categoria($cat->id_categoria);
+            $productos_por_categoria[$cat->id_categoria] = $this->Producto_model->obtener_por_categoria($cat->id_categoria, $this->id_sucursal);
         }
         $data['productos_por_categoria'] = $productos_por_categoria;
-        $data['nombre_sucursal'] = $this->session->userdata('nombre_sucursal');
         
         $this->load->view('admin/mi_carta', $data);
     }
 }
+

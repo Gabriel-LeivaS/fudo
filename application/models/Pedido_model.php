@@ -11,7 +11,7 @@ class Pedido_model extends CI_Model {
      * @param int|null $id_sucursal
      * @return int|false id_pedido o FALSE
      */
-    public function crear_pedido($id_cliente, $detalle, $id_mesa = NULL, $id_sucursal = NULL) {
+    public function crear_pedido($id_cliente, $detalle, $id_mesa = NULL, $id_sucursal = NULL, $notas = NULL) {
         $this->db->trans_start();
 
         $total = 0;
@@ -34,6 +34,11 @@ class Pedido_model extends CI_Model {
         if (!is_null($id_sucursal)) {
             $insert['id_sucursal'] = $id_sucursal;
         }
+        
+        // incluir notas si se proporciona
+        if (!is_null($notas) && !empty($notas)) {
+            $insert['notas'] = $notas;
+        }
 
         $this->db->insert('pedidos', $insert);
 
@@ -46,6 +51,10 @@ class Pedido_model extends CI_Model {
                 'cantidad' => $item['cantidad'],
                 'subtotal' => $item['subtotal']
             ]);
+            
+            // Reducir stock del producto
+            $this->load->model('Producto_model');
+            $this->Producto_model->reducir_stock($item['id_producto'], $item['cantidad']);
         }
 
         $this->db->trans_complete();
@@ -54,7 +63,8 @@ class Pedido_model extends CI_Model {
     }
 
     public function obtener_pedidos_pendientes($id_sucursal = null) {
-        $this->db->where('estado', 'Pendiente');
+        // Mostrar pedidos Pendientes y En preparación (no los que están Listos)
+        $this->db->where_in('estado', ['Pendiente', 'En preparación']);
         if ($id_sucursal !== null) {
             $this->db->where('id_sucursal', $id_sucursal);
         }

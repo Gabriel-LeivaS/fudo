@@ -6,6 +6,8 @@
     <title>Gestión de Productos - Fudo</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
         :root {
             --accent: #b08c6a;
@@ -13,57 +15,71 @@
             --muted: #6c6c6c;
             --card-radius: 14px;
             --shadow: 0 14px 36px rgba(11,11,11,0.06);
+            --bg-light: #fbf8f6;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { 
             height: 100%; 
             font-family: 'Montserrat', system-ui, sans-serif; 
             color: #222; 
-            background: #fbf8f6;
+            background: var(--bg-light);
+            padding: 20px;
         }
+        
+        /* Navbar Superior */
+        .navbar {
+            background: white;
+            padding: 15px 0;
+            margin-bottom: 20px;
+            border-radius: 14px;
+            box-shadow: var(--shadow);
+        }
+        
+        .navbar-brand {
+            font-weight: 800;
+            font-size: 20px;
+            color: var(--accent);
+        }
+        
+        .nav-link {
+            font-weight: 600;
+            color: var(--muted);
+            margin: 0 10px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        
+        .nav-link:hover {
+            background: var(--bg-light);
+            color: var(--accent);
+        }
+        
+        .nav-link.active {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+            color: white;
+        }
+        
+        /* Admin Header */
         .admin-header {
             background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
             color: white;
-            padding: 1.5rem 0;
-            margin-bottom: 2rem;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            padding: 30px;
+            border-radius: 14px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
         }
-        .admin-header h2 {
+        .admin-header h1 {
+            font-size: 28px;
             font-weight: 800;
-            font-size: 24px;
+            margin: 0 0 8px 0;
+        }
+        .admin-header p {
             margin: 0;
+            opacity: 0.95;
+            font-size: 15px;
         }
-        .btn-group .btn {
-            font-size: 13px;
-            font-weight: 600;
-            padding: 8px 14px;
-            border-radius: 8px;
-            border: none;
-            transition: all 0.2s ease;
-        }
-        .btn-group .btn-light {
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: 1px solid rgba(255,255,255,0.3);
-        }
-        .btn-group .btn-light:hover {
-            background: rgba(255,255,255,0.3);
-            transform: translateY(-2px);
-        }
-        .btn-group .btn-light.active {
-            background: white;
-            color: var(--accent);
-            font-weight: 700;
-        }
-        .btn-danger {
-            background: #e74c3c !important;
-            border: none;
-        }
-        .btn-danger:hover {
-            background: #c0392b !important;
-            transform: translateY(-2px);
-        }
-        .container { max-width: 1100px; }
         .card {
             border: none;
             box-shadow: var(--shadow);
@@ -258,49 +274,57 @@
     </style>
 </head>
 <body>
-    <!-- Header con navegación -->
-    <div class="admin-header">
-        <div class="container">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                <h2>🛍️ Gestión de Productos</h2>
-                <div class="btn-group">
-                    <a href="<?= site_url('admin') ?>" class="btn btn-light btn-sm">📦 Pedidos</a>
-                    <a href="<?= site_url('admin/categorias') ?>" class="btn btn-light btn-sm">🏷️ Categorías</a>
-                    <a href="<?= site_url('admin/productos') ?>" class="btn btn-light btn-sm active">🛍️ Productos</a>
-                    <?php if($this->session->userdata('rol') == 'admin_sucursal'): ?>
-                        <a href="<?= site_url('admin/mi_carta') ?>" class="btn btn-light btn-sm">📋 Mi Carta</a>
-                        <a href="<?= site_url('mesas') ?>" class="btn btn-light btn-sm">🪑 Mesas</a>
-                        <a href="<?= site_url('cocina') ?>" class="btn btn-light btn-sm">🔥 Cocina</a>
-                    <?php endif; ?>
-                    <?php if($this->session->userdata('rol') == 'admin'): ?>
-                        <a href="<?= site_url('usuarios') ?>" class="btn btn-light btn-sm">👥 Usuarios</a>
-                        <a href="<?= site_url('sucursales') ?>" class="btn btn-light btn-sm">🏢 Sucursales</a>
-                    <?php endif; ?>
-                    <a href="<?= site_url('login/salir') ?>" class="btn btn-danger btn-sm">🚪 Salir</a>
-                </div>
+    <!-- Navbar Superior -->
+    <nav class="navbar">
+        <div class="container-fluid">
+            <span class="navbar-brand">� FUDO</span>
+            <div class="d-flex align-items-center gap-3">
+                <?php if($this->session->userdata('rol') == 'admin_sucursal'): ?>
+                    <a href="<?= site_url('admin') ?>" class="nav-link">📦 Pedidos</a>
+                <?php endif; ?>
+                <a href="<?= site_url('admin/categorias') ?>" class="nav-link">🏷️ Categorías</a>
+                <a href="<?= site_url('admin/productos') ?>" class="nav-link active">🛍️ Productos</a>
+                <?php if($this->session->userdata('rol') == 'admin_sucursal'): ?>
+                    <a href="<?= site_url('admin/mi_carta') ?>" class="nav-link">📋 Mi Carta</a>
+                    <a href="<?= site_url('mesas') ?>" class="nav-link">🪑 Mesas</a>
+                    <a href="<?= site_url('cocina') ?>" class="nav-link">🔥 Cocina</a>
+                <?php endif; ?>
+                <?php if($this->session->userdata('rol') == 'admin'): ?>
+                    <a href="<?= site_url('usuarios') ?>" class="nav-link">👥 Usuarios</a>
+                    <a href="<?= site_url('sucursales') ?>" class="nav-link">🏢 Sucursales</a>
+                <?php endif; ?>
+                <?php if($this->session->userdata('rol') == 'usuario'): ?>
+                    <span class="badge bg-info">👁️ Solo Lectura</span>
+                <?php endif; ?>
+                <a href="<?= site_url('login/salir') ?>" class="btn btn-danger btn-action">🚪 Salir</a>
             </div>
         </div>
-    </div>
+    </nav>
 
-    <div class="container">
+    <div class="container-fluid">
+        <!-- Admin Header -->
+        <div class="admin-header">
+            <h1>🛍️ Gestión de Productos</h1>
+            <p>Administra el catálogo completo de productos de tu carta</p>
+        </div>
         <?php if($this->session->userdata('rol') == 'admin'): ?>
         <!-- Filtro de Sucursal para Super Admin -->
         <div class="card mb-3">
             <div class="card-body">
                 <div class="row align-items-center">
                     <div class="col-md-3">
-                        <label class="form-label fw-bold">🏢 Filtrar por Sucursal:</label>
+                        <label class="form-label fw-bold">🏢 Seleccione una Sucursal:</label>
                     </div>
                     <div class="col-md-6">
                         <select id="filtroSucursal" class="form-select" onchange="filtrarPorSucursal()">
-                            <option value="">Todas las sucursales</option>
+                            <option value="">-- Seleccione una sucursal --</option>
                             <?php foreach($sucursales as $suc): ?>
                                 <option value="<?= $suc->id_sucursal ?>"><?= $suc->nombre ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
                     <div class="col-md-3 text-end">
-                        <span class="badge bg-info" id="contadorProductos"><?= count($productos) ?> productos</span>
+                        <span class="badge bg-info" id="contadorProductos" style="display: none;">0 productos</span>
                     </div>
                 </div>
             </div>
@@ -316,21 +340,35 @@
         <div class="card">
             <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
                 <h5>📋 Listado de Productos</h5>
-                <button class="btn btn-primary" onclick="abrirModalCrear()">
+                <?php if($this->session->userdata('rol') != 'usuario'): ?>
+                <button class="btn btn-primary" onclick="abrirModalCrear()" id="btnNuevoProducto">
                     ➕ Nuevo Producto
                 </button>
+                <?php endif; ?>
             </div>
             <div class="card-body">
-                <!-- Filtro por categoría -->
-                <div class="mb-3">
-                    <label class="form-label">Filtrar por categoría:</label>
-                    <select class="form-select" id="filtroCategoria" onchange="filtrarPorCategoria()">
-                        <option value="">Todas las categorías</option>
-                        <?php foreach($categorias as $cat): ?>
-                            <option value="<?= $cat->id_categoria ?>"><?= htmlspecialchars($cat->nombre) ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                <?php if($this->session->userdata('rol') == 'admin'): ?>
+                <!-- Mensaje inicial para super admin -->
+                <div id="mensajeSeleccionSucursal" class="text-center py-5">
+                    <div class="mb-3">
+                        <i class="bi bi-building" style="font-size: 3rem; color: #b08c6a;"></i>
+                    </div>
+                    <h5 class="text-muted">Seleccione una sucursal para ver sus productos</h5>
+                    <p class="text-muted">Use el selector de sucursal arriba para comenzar</p>
                 </div>
+                <?php endif; ?>
+
+                <div id="contenidoProductos" <?= $this->session->userdata('rol') == 'admin' ? 'style="display: none;"' : '' ?>>
+                    <!-- Filtro por categoría -->
+                    <div class="mb-3">
+                        <label class="form-label">Filtrar por categoría:</label>
+                        <select class="form-select" id="filtroCategoria" onchange="filtrarPorCategoria()">
+                            <option value="">Todas las categorías</option>
+                            <?php foreach($categorias as $cat): ?>
+                                <option value="<?= $cat->id_categoria ?>"><?= htmlspecialchars($cat->nombre) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
 
                 <div class="table-responsive">
                     <table class="table table-hover align-middle" id="tablaProductos">
@@ -344,6 +382,7 @@
                                 <th width="150">Sucursal</th>
                                 <?php endif; ?>
                                 <th width="100" class="text-end">Precio</th>
+                                <th width="100" class="text-center">Stock</th>
                                 <th width="100" class="text-center">Disponible</th>
                                 <th width="220" class="text-center">Acciones</th>
                             </tr>
@@ -357,7 +396,10 @@
                                 </tr>
                             <?php else: ?>
                                 <?php foreach($productos as $prod): ?>
-                                    <tr data-categoria="<?= $prod->id_categoria ?>" data-sucursal="<?= $prod->id_sucursal ?? '' ?>">
+                                    <tr data-categoria="<?= $prod->id_categoria ?>" 
+                                        data-sucursal="<?= $prod->id_sucursal ?? '' ?>" 
+                                        data-disponible="<?= $prod->disponible ? 'true' : 'false' ?>" 
+                                        data-id="<?= $prod->id_producto ?>">
                                         <td><strong>#<?= $prod->id_producto ?></strong></td>
                                         <td><?= htmlspecialchars($prod->nombre) ?></td>
                                         <td>
@@ -379,6 +421,27 @@
                                             <strong>$<?= number_format($prod->precio, 0, ',', '.') ?></strong>
                                         </td>
                                         <td class="text-center">
+                                            <?php 
+                                            $stock = isset($prod->stock) ? (int)$prod->stock : 0;
+                                            $badge_class = 'bg-success';
+                                            $icon = '✅';
+                                            
+                                            if ($stock == 0) {
+                                                $badge_class = 'bg-danger';
+                                                $icon = '❌';
+                                            } elseif ($stock <= 10) {
+                                                $badge_class = 'bg-warning';
+                                                $icon = '⚠️';
+                                            } elseif ($stock <= 50) {
+                                                $badge_class = 'bg-info';
+                                                $icon = '📦';
+                                            }
+                                            ?>
+                                            <span class="badge <?= $badge_class ?> badge-custom" style="min-width: 70px;">
+                                                <?= $icon ?> <?= $stock ?>
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
                                             <?php if($prod->disponible): ?>
                                                 <span class="badge bg-success badge-custom">Sí</span>
                                             <?php else: ?>
@@ -387,13 +450,15 @@
                                         </td>
                                         <td class="text-center">
                                             <div class="action-buttons">
+                                                <?php if($this->session->userdata('rol') != 'usuario'): ?>
                                                 <button class="btn btn-warning btn-action" 
                                                         onclick='abrirModalEditar(<?= json_encode([
                                                             'id_producto' => $prod->id_producto,
                                                             'nombre' => $prod->nombre,
                                                             'descripcion' => $prod->descripcion,
                                                             'precio' => $prod->precio,
-                                                            'id_categoria' => $prod->id_categoria
+                                                            'id_categoria' => $prod->id_categoria,
+                                                            'stock' => isset($prod->stock) ? (int)$prod->stock : 0
                                                         ]) ?>)'>
                                                     ✏️
                                                 </button>
@@ -406,6 +471,9 @@
                                                         onclick="eliminarProducto(<?= $prod->id_producto ?>, '<?= htmlspecialchars($prod->nombre, ENT_QUOTES) ?>')">
                                                     🗑️
                                                 </button>
+                                                <?php else: ?>
+                                                <span class="badge bg-secondary">Solo lectura</span>
+                                                <?php endif; ?>
                                             </div>
                                         </td>
                                     </tr>
@@ -414,6 +482,7 @@
                         </tbody>
                     </table>
                 </div>
+                </div> <!-- Cierre de contenidoProductos -->
             </div>
         </div>
     </div>
@@ -430,6 +499,19 @@
                     <form id="formProducto">
                         <input type="hidden" id="id_producto" name="id_producto">
                         
+                        <?php if($this->session->userdata('rol') == 'admin'): ?>
+                        <div class="mb-3" id="campoSucursal">
+                            <label for="id_sucursal_producto" class="form-label">🏢 Sucursal *</label>
+                            <select class="form-select" id="id_sucursal_producto" name="id_sucursal" required onchange="cargarCategoriasPorSucursal()">
+                                <option value="">-- Seleccione una sucursal --</option>
+                                <?php foreach($sucursales as $suc): ?>
+                                    <option value="<?= $suc->id_sucursal ?>"><?= $suc->nombre ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <div class="form-text">Seleccione la sucursal a la que pertenecerá este producto</div>
+                        </div>
+                        <?php endif; ?>
+                        
                         <div class="row">
                             <div class="col-md-8 mb-3">
                                 <label for="nombre" class="form-label">Nombre del Producto *</label>
@@ -445,20 +527,35 @@
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="descripcion" class="form-label">Descripción</label>
-                            <textarea class="form-control" id="descripcion" name="descripcion" 
-                                      rows="3" placeholder="Descripción breve del producto"></textarea>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="descripcion" class="form-label">Descripción</label>
+                                <textarea class="form-control" id="descripcion" name="descripcion" 
+                                          rows="3" placeholder="Descripción breve del producto"></textarea>
+                            </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="id_categoria" class="form-label">Categoría *</label>
-                            <select class="form-select" id="id_categoria" name="id_categoria" required>
-                                <option value="">Seleccione una categoría</option>
-                                <?php foreach($categorias as $cat): ?>
-                                    <option value="<?= $cat->id_categoria ?>"><?= htmlspecialchars($cat->nombre) ?></option>
-                                <?php endforeach; ?>
-                            </select>
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label for="id_categoria" class="form-label">📁 Categoría *</label>
+                                <select class="form-select" id="id_categoria" name="id_categoria" required>
+                                    <?php if($this->session->userdata('rol') == 'admin'): ?>
+                                        <option value="">Seleccione primero una sucursal</option>
+                                    <?php else: ?>
+                                        <option value="">Seleccione una categoría</option>
+                                        <?php foreach($categorias as $cat): ?>
+                                            <option value="<?= $cat->id_categoria ?>"><?= htmlspecialchars($cat->nombre) ?></option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </select>
+                                <div class="form-text">Las categorías se cargan según la sucursal seleccionada</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="stock" class="form-label">📦 Stock</label>
+                                <input type="number" class="form-control" id="stock" name="stock" 
+                                       min="0" step="1" value="0" required>
+                                <div class="form-text">Unidades disponibles</div>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -476,16 +573,80 @@
     <script>
         let modal;
         let esEdicion = false;
+        
+        // Almacenar todas las categorías por sucursal
+        const categoriasPorSucursal = <?= json_encode(array_reduce($categorias, function($acc, $cat) {
+            if(!isset($acc[$cat->id_sucursal])) $acc[$cat->id_sucursal] = [];
+            $acc[$cat->id_sucursal][] = ['id' => $cat->id_categoria, 'nombre' => $cat->nombre];
+            return $acc;
+        }, [])) ?>;
 
         document.addEventListener('DOMContentLoaded', function() {
             modal = new bootstrap.Modal(document.getElementById('modalProducto'));
+            
+            // DEBUG: Mostrar disponibilidad de todos los productos
+            console.log('=== DEBUG: Disponibilidad de Productos ===');
+            const filas = document.querySelectorAll('#tablaProductos tr[data-id]');
+            filas.forEach(fila => {
+                const id = fila.getAttribute('data-id');
+                const disponible = fila.getAttribute('data-disponible');
+                const badge = fila.querySelector('.badge')?.textContent;
+                console.log(`ID: ${id}, Disponible (data): ${disponible}, Badge: ${badge}`);
+            });
+            console.log('==========================================');
+            
+            <?php if($this->session->userdata('rol') == 'admin'): ?>
+            // Restaurar sucursal seleccionada después de reload
+            const sucursalGuardada = sessionStorage.getItem('sucursalSeleccionada');
+            if(sucursalGuardada) {
+                const filtroSucursal = document.getElementById('filtroSucursal');
+                if(filtroSucursal) {
+                    filtroSucursal.value = sucursalGuardada;
+                    // Aplicar el filtro automáticamente
+                    filtrarPorSucursal();
+                    // Limpiar sessionStorage
+                    sessionStorage.removeItem('sucursalSeleccionada');
+                }
+            }
+            <?php endif; ?>
         });
+        
+        // Cargar categorías según sucursal seleccionada en el modal
+        function cargarCategoriasPorSucursal() {
+            const sucursalId = document.getElementById('id_sucursal_producto').value;
+            const selectCategoria = document.getElementById('id_categoria');
+            
+            selectCategoria.innerHTML = '<option value="">-- Seleccione una categoría --</option>';
+            
+            if(sucursalId && categoriasPorSucursal[sucursalId]) {
+                categoriasPorSucursal[sucursalId].forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat.id;
+                    option.textContent = cat.nombre;
+                    selectCategoria.appendChild(option);
+                });
+            }
+        }
 
         function abrirModalCrear() {
             esEdicion = false;
             document.getElementById('modalTitulo').textContent = 'Nuevo Producto';
             document.getElementById('formProducto').reset();
             document.getElementById('id_producto').value = '';
+            document.getElementById('stock').value = '0';
+            
+            <?php if($this->session->userdata('rol') == 'admin'): ?>
+            // Si hay una sucursal seleccionada en el filtro, pre-seleccionarla en el modal
+            const sucursalSeleccionada = document.getElementById('filtroSucursal')?.value;
+            if(sucursalSeleccionada) {
+                document.getElementById('id_sucursal_producto').value = sucursalSeleccionada;
+                cargarCategoriasPorSucursal();
+            } else {
+                // Resetear categorías
+                document.getElementById('id_categoria').innerHTML = '<option value="">Seleccione primero una sucursal</option>';
+            }
+            <?php endif; ?>
+            
             modal.show();
         }
 
@@ -496,7 +657,32 @@
             document.getElementById('nombre').value = producto.nombre;
             document.getElementById('descripcion').value = producto.descripcion;
             document.getElementById('precio').value = producto.precio;
+            document.getElementById('stock').value = producto.stock || 0;
+            
+            <?php if($this->session->userdata('rol') == 'admin'): ?>
+            // Para super admin: cargar categorías de la sucursal
+            const filas = document.querySelectorAll('#tablaProductos tbody tr');
+            let sucursalId = null;
+            filas.forEach(fila => {
+                const idEnFila = fila.querySelector('td:first-child strong')?.textContent.replace('#', '');
+                if(idEnFila == producto.id_producto) {
+                    sucursalId = fila.getAttribute('data-sucursal');
+                }
+            });
+            if(sucursalId) {
+                document.getElementById('id_sucursal_producto').value = sucursalId;
+                cargarCategoriasPorSucursal();
+            }
+            
+            // Esperar a que las categorías se carguen antes de seleccionar
+            setTimeout(() => {
+                document.getElementById('id_categoria').value = producto.id_categoria;
+            }, 100);
+            <?php else: ?>
+            // Para admin_sucursal: las categorías ya están cargadas, solo seleccionar
             document.getElementById('id_categoria').value = producto.id_categoria;
+            <?php endif; ?>
+            
             modal.show();
         }
 
@@ -508,13 +694,57 @@
             const precio = formData.get('precio');
             const categoria = formData.get('id_categoria');
 
-            if(!nombre || !precio || !categoria) {
-                alert('Por favor completa todos los campos obligatorios (*)');
+            if(!nombre) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Campo requerido',
+                    text: 'El nombre del producto es obligatorio',
+                    confirmButtonColor: '#b08c6a'
+                });
+                return;
+            }
+
+            if(!precio) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Campo requerido',
+                    text: 'El precio es obligatorio',
+                    confirmButtonColor: '#b08c6a'
+                });
                 return;
             }
 
             if(precio < 0) {
-                alert('El precio debe ser mayor o igual a 0');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Precio inválido',
+                    text: 'El precio debe ser mayor o igual a 0',
+                    confirmButtonColor: '#b08c6a'
+                });
+                return;
+            }
+            
+            <?php if($this->session->userdata('rol') == 'admin'): ?>
+            // Validar que se haya seleccionado una sucursal (solo para super admin)
+            const idSucursal = formData.get('id_sucursal');
+            if(!idSucursal) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Sucursal requerida',
+                    text: 'Debe seleccionar una sucursal para el producto',
+                    confirmButtonColor: '#b08c6a'
+                });
+                return;
+            }
+            <?php endif; ?>
+
+            if(!categoria) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Categoría requerida',
+                    text: 'Debe seleccionar una categoría para el producto',
+                    confirmButtonColor: '#b08c6a'
+                });
                 return;
             }
 
@@ -532,18 +762,48 @@
 
                 if(result.success) {
                     modal.hide();
-                    alert(result.message);
+                    await Swal.fire({
+                        icon: 'success',
+                        title: '¡Éxito!',
+                        text: result.message,
+                        confirmButtonColor: '#b08c6a',
+                        timer: 1500,
+                        timerProgressBar: true,
+                        showConfirmButton: false
+                    });
+                    
+                    <?php if($this->session->userdata('rol') == 'admin'): ?>
+                    // Guardar sucursal seleccionada antes de recargar
+                    const sucursalActual = document.getElementById('filtroSucursal')?.value;
+                    if(sucursalActual) {
+                        sessionStorage.setItem('sucursalSeleccionada', sucursalActual);
+                    }
+                    <?php endif; ?>
+                    
                     location.reload();
                 } else {
-                    alert(result.message || 'Error al guardar');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: result.message || 'Error al guardar',
+                        confirmButtonColor: '#b08c6a'
+                    });
                 }
             } catch(error) {
                 console.error('Error:', error);
-                alert('Error de conexión');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de conexión',
+                    text: 'No se pudo conectar con el servidor',
+                    confirmButtonColor: '#b08c6a'
+                });
             }
         }
 
         async function toggleDisponibilidad(id, nuevoEstado) {
+            // Debug: verificar valores
+            console.log('Toggle Disponibilidad - ID:', id, 'Nuevo Estado:', nuevoEstado, 'Tipo:', typeof nuevoEstado);
+            
             const formData = new FormData();
             formData.append('id_producto', id);
             formData.append('disponible', nuevoEstado);
@@ -555,20 +815,63 @@
                 });
 
                 const result = await response.json();
+                
+                // Debug: verificar respuesta
+                console.log('Respuesta del servidor:', result);
 
                 if(result.success) {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: '¡Éxito!',
+                        text: result.message || 'Disponibilidad actualizada correctamente',
+                        confirmButtonColor: '#b08c6a',
+                        timer: 1500,
+                        timerProgressBar: true,
+                        showConfirmButton: false
+                    });
+                    
+                    <?php if($this->session->userdata('rol') == 'admin'): ?>
+                    // Guardar sucursal seleccionada antes de recargar
+                    const sucursalActual = document.getElementById('filtroSucursal')?.value;
+                    if(sucursalActual) {
+                        sessionStorage.setItem('sucursalSeleccionada', sucursalActual);
+                    }
+                    <?php endif; ?>
+                    
                     location.reload();
                 } else {
-                    alert(result.message || 'Error al cambiar la disponibilidad');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: result.message || 'Error al cambiar la disponibilidad',
+                        confirmButtonColor: '#b08c6a'
+                    });
                 }
             } catch(error) {
                 console.error('Error:', error);
-                alert('Error de conexión');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de conexión',
+                    text: 'No se pudo conectar con el servidor',
+                    confirmButtonColor: '#b08c6a'
+                });
             }
         }
 
         async function eliminarProducto(id, nombre) {
-            if(!confirm(`¿Estás seguro de eliminar el producto "${nombre}"?\n\nEsta acción no se puede deshacer.`)) {
+            const result = await Swal.fire({
+                title: '¿Estás seguro?',
+                html: `¿Deseas eliminar el producto <strong>"${nombre}"</strong>?<br><br><small class="text-danger">Esta acción no se puede deshacer.</small>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '✓ Sí, eliminar',
+                cancelButtonText: '✕ Cancelar',
+                reverseButtons: true
+            });
+
+            if(!result.isConfirmed) {
                 return;
             }
 
@@ -581,17 +884,44 @@
                     body: formData
                 });
 
-                const result = await response.json();
+                const resultData = await response.json();
 
-                if(result.success) {
-                    alert(result.message);
+                if(resultData.success) {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: '¡Eliminado!',
+                        text: resultData.message,
+                        confirmButtonColor: '#b08c6a',
+                        timer: 1500,
+                        timerProgressBar: true,
+                        showConfirmButton: false
+                    });
+                    
+                    <?php if($this->session->userdata('rol') == 'admin'): ?>
+                    // Guardar sucursal seleccionada antes de recargar
+                    const sucursalActual = document.getElementById('filtroSucursal')?.value;
+                    if(sucursalActual) {
+                        sessionStorage.setItem('sucursalSeleccionada', sucursalActual);
+                    }
+                    <?php endif; ?>
+                    
                     location.reload();
                 } else {
-                    alert(result.message || 'Error al eliminar');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: resultData.message || 'Error al eliminar',
+                        confirmButtonColor: '#b08c6a'
+                    });
                 }
             } catch(error) {
                 console.error('Error:', error);
-                alert('Error de conexión');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de conexión',
+                    text: 'No se pudo conectar con el servidor',
+                    confirmButtonColor: '#b08c6a'
+                });
             }
         }
 
@@ -614,20 +944,52 @@
         function filtrarPorSucursal() {
             const sucursalId = document.getElementById('filtroSucursal').value;
             const filas = document.querySelectorAll('tr[data-sucursal]');
+            const mensajeSeleccion = document.getElementById('mensajeSeleccionSucursal');
+            const contenidoProductos = document.getElementById('contenidoProductos');
+            const contadorBadge = document.getElementById('contadorProductos');
+            const filtroCategoria = document.getElementById('filtroCategoria');
+            let contador = 0;
 
+            // Si no hay sucursal seleccionada, ocultar contenido y mostrar mensaje
+            if(sucursalId === '') {
+                if(mensajeSeleccion) mensajeSeleccion.style.display = 'block';
+                if(contenidoProductos) contenidoProductos.style.display = 'none';
+                if(contadorBadge) contadorBadge.style.display = 'none';
+                return;
+            }
+
+            // Si hay sucursal seleccionada, mostrar contenido y ocultar mensaje
+            if(mensajeSeleccion) mensajeSeleccion.style.display = 'none';
+            if(contenidoProductos) contenidoProductos.style.display = 'block';
+            if(contadorBadge) contadorBadge.style.display = 'inline-block';
+
+            // Filtrar filas por sucursal
             filas.forEach(fila => {
                 const sucursalFila = fila.getAttribute('data-sucursal');
                 
-                if(sucursalId === '' || sucursalFila === sucursalId) {
+                if(sucursalFila === sucursalId) {
                     fila.style.display = '';
+                    contador++;
                 } else {
                     fila.style.display = 'none';
                 }
             });
 
-            // Resetear filtro de categoría
-            document.getElementById('filtroCategoria').value = '';
-            actualizarContador();
+            // Actualizar dropdown de categorías con solo las de esta sucursal
+            if(filtroCategoria && categoriasPorSucursal[sucursalId]) {
+                filtroCategoria.innerHTML = '<option value="">Todas las categorías</option>';
+                categoriasPorSucursal[sucursalId].forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat.id;
+                    option.textContent = cat.nombre;
+                    filtroCategoria.appendChild(option);
+                });
+            }
+
+            // Actualizar contador
+            if(contadorBadge) {
+                contadorBadge.textContent = contador + ' productos';
+            }
         }
 
         function actualizarContador() {
@@ -646,5 +1008,7 @@
             }
         }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
 </html>
+

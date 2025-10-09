@@ -273,6 +273,17 @@
         </div>
     </nav>
 
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+        <div id="toastNotificacion" class="toast" role="alert">
+            <div class="toast-header">
+                <strong class="me-auto" id="toastTitulo">Notificación</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" id="toastMensaje"></div>
+        </div>
+    </div>
+
     <div class="container-fluid">
         <div class="admin-header">
             <h1>👥 Gestión de Usuarios</h1>
@@ -364,8 +375,10 @@
                                         <td>
                                             <?php if ($usuario->rol == 'admin'): ?>
                                                 <span class="badge bg-primary">⭐ Super Admin</span>
-                                            <?php else: ?>
+                                            <?php elseif ($usuario->rol == 'admin_sucursal'): ?>
                                                 <span class="badge bg-warning">👤 Admin Sucursal</span>
+                                            <?php else: ?>
+                                                <span class="badge bg-secondary">👁️ Usuario</span>
                                             <?php endif; ?>
                                         </td>
                                         <td>
@@ -454,7 +467,13 @@
                                 <option value="">Selecciona un rol</option>
                                 <option value="admin">⭐ Super Admin</option>
                                 <option value="admin_sucursal">👤 Admin Sucursal</option>
+                                <option value="usuario">👁️ Usuario (Solo Lectura)</option>
                             </select>
+                            <small class="form-text text-muted">
+                                <strong>Super Admin:</strong> Control total del sistema · 
+                                <strong>Admin Sucursal:</strong> Gestión de su sucursal · 
+                                <strong>Usuario:</strong> Solo visualización
+                            </small>
                         </div>
                         <div class="mb-3 sucursal-field" id="sucursalFieldCrear">
                             <label class="form-label">🏢 Sucursal *</label>
@@ -520,7 +539,13 @@
                                     onchange="toggleSucursalField('editar')">
                                 <option value="admin">⭐ Super Admin</option>
                                 <option value="admin_sucursal">👤 Admin Sucursal</option>
+                                <option value="usuario">👁️ Usuario (Solo Lectura)</option>
                             </select>
+                            <small class="form-text text-muted">
+                                <strong>Super Admin:</strong> Control total · 
+                                <strong>Admin Sucursal:</strong> Gestión operativa · 
+                                <strong>Usuario:</strong> Solo lectura
+                            </small>
                         </div>
                         <div class="mb-3 sucursal-field" id="sucursalFieldEditar">
                             <label class="form-label">🏢 Sucursal *</label>
@@ -549,6 +574,29 @@
         </div>
     </div>
 
+    <!-- Modal de Confirmación -->
+    <div class="modal fade" id="modalConfirmacion" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header" id="confirmacionHeader">
+                    <h5 class="modal-title" id="confirmacionTitulo">Confirmar acción</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="confirmacionMensaje"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        ❌ Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" id="confirmacionBoton">
+                        ✅ Confirmar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const usuarios = <?= json_encode($usuarios) ?>;
@@ -570,7 +618,8 @@
             document.getElementById('editarRol').value = usuario.rol;
             document.getElementById('editarContrasena').value = '';
             
-            if (usuario.rol === 'admin_sucursal') {
+            // Mostrar campo sucursal para admin_sucursal y usuario
+            if (usuario.rol === 'admin_sucursal' || usuario.rol === 'usuario') {
                 document.getElementById('sucursalFieldEditar').classList.add('show');
                 document.getElementById('editarSucursal').value = usuario.id_sucursal || '';
                 document.getElementById('editarSucursal').required = true;
@@ -587,7 +636,8 @@
             const field = document.getElementById(`sucursalField${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
             const select = field.querySelector('select');
 
-            if (rol === 'admin_sucursal') {
+            // Mostrar campo de sucursal para admin_sucursal y usuario
+            if (rol === 'admin_sucursal' || rol === 'usuario') {
                 field.classList.add('show');
                 select.required = true;
             } else {
@@ -595,6 +645,83 @@
                 select.required = false;
                 select.value = '';
             }
+        }
+
+        // Función para mostrar notificaciones Toast
+        function mostrarToast(tipo, mensaje) {
+            const toastEl = document.getElementById('toastNotificacion');
+            const toastHeader = toastEl.querySelector('.toast-header');
+            const toastTitulo = document.getElementById('toastTitulo');
+            const toastMensaje = document.getElementById('toastMensaje');
+
+            // Remover clases previas
+            toastHeader.classList.remove('bg-success', 'bg-danger', 'bg-warning', 'text-white');
+
+            // Configurar según el tipo
+            if (tipo === 'success') {
+                toastHeader.classList.add('bg-success', 'text-white');
+                toastTitulo.textContent = '✅ Éxito';
+            } else if (tipo === 'error') {
+                toastHeader.classList.add('bg-danger', 'text-white');
+                toastTitulo.textContent = '❌ Error';
+            } else if (tipo === 'warning') {
+                toastHeader.classList.add('bg-warning', 'text-white');
+                toastTitulo.textContent = '⚠️ Advertencia';
+            }
+
+            toastMensaje.textContent = mensaje;
+
+            // Mostrar el toast
+            const toast = new bootstrap.Toast(toastEl, {
+                autohide: true,
+                delay: 3000
+            });
+            toast.show();
+        }
+
+        // Función para mostrar modal de confirmación
+        function mostrarConfirmacion(titulo, mensaje, tipoBoton, callback) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('modalConfirmacion');
+                const header = document.getElementById('confirmacionHeader');
+                const tituloEl = document.getElementById('confirmacionTitulo');
+                const mensajeEl = document.getElementById('confirmacionMensaje');
+                const boton = document.getElementById('confirmacionBoton');
+
+                // Configurar estilos según el tipo
+                header.classList.remove('bg-danger', 'bg-warning', 'bg-info', 'text-white');
+                boton.classList.remove('btn-danger', 'btn-warning', 'btn-primary');
+
+                if (tipoBoton === 'danger') {
+                    header.classList.add('bg-danger', 'text-white');
+                    boton.classList.add('btn-danger');
+                } else if (tipoBoton === 'warning') {
+                    header.classList.add('bg-warning', 'text-white');
+                    boton.classList.add('btn-warning');
+                } else {
+                    header.classList.add('bg-info', 'text-white');
+                    boton.classList.add('btn-primary');
+                }
+
+                tituloEl.textContent = titulo;
+                mensajeEl.textContent = mensaje;
+
+                // Manejar la confirmación
+                const confirmar = () => {
+                    resolve(true);
+                    bootstrap.Modal.getInstance(modal).hide();
+                    boton.removeEventListener('click', confirmar);
+                };
+
+                boton.addEventListener('click', confirmar);
+
+                // Si se cierra el modal sin confirmar
+                modal.addEventListener('hidden.bs.modal', () => {
+                    resolve(false);
+                }, { once: true });
+
+                new bootstrap.Modal(modal).show();
+            });
         }
 
         async function crearUsuario(e) {
@@ -610,13 +737,13 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    alert('✅ ' + data.message);
-                    location.reload();
+                    mostrarToast('success', data.message);
+                    setTimeout(() => location.reload(), 1500);
                 } else {
-                    alert('❌ ' + data.message);
+                    mostrarToast('error', data.message);
                 }
             } catch (error) {
-                alert('❌ Error al crear el usuario');
+                mostrarToast('error', 'Error al crear el usuario');
                 console.error(error);
             }
         }
@@ -635,21 +762,26 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    alert('✅ ' + data.message);
-                    location.reload();
+                    mostrarToast('success', data.message);
+                    setTimeout(() => location.reload(), 1500);
                 } else {
-                    alert('❌ ' + data.message);
+                    mostrarToast('error', data.message);
                 }
             } catch (error) {
-                alert('❌ Error al actualizar el usuario');
+                mostrarToast('error', 'Error al actualizar el usuario');
                 console.error(error);
             }
         }
 
         async function cambiarEstado(id, nuevoEstado) {
-            if (!confirm(`¿Deseas ${nuevoEstado ? 'activar' : 'desactivar'} este usuario?`)) {
-                return;
-            }
+            const accion = nuevoEstado ? 'activar' : 'desactivar';
+            const confirmado = await mostrarConfirmacion(
+                `${accion === 'activar' ? '✅' : '⚠️'} ${accion.charAt(0).toUpperCase() + accion.slice(1)} Usuario`,
+                `¿Estás seguro de que deseas ${accion} este usuario?`,
+                accion === 'activar' ? 'primary' : 'warning'
+            );
+
+            if (!confirmado) return;
 
             try {
                 const response = await fetch(`<?= site_url("usuarios/cambiar_estado") ?>/${id}/${nuevoEstado}`, {
@@ -659,21 +791,25 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    alert('✅ ' + data.message);
-                    location.reload();
+                    mostrarToast('success', data.message);
+                    setTimeout(() => location.reload(), 1500);
                 } else {
-                    alert('❌ ' + data.message);
+                    mostrarToast('error', data.message);
                 }
             } catch (error) {
-                alert('❌ Error al cambiar el estado');
+                mostrarToast('error', 'Error al cambiar el estado');
                 console.error(error);
             }
         }
 
         async function confirmarEliminar(id, usuario) {
-            if (!confirm(`⚠️ ¿Estás seguro de eliminar al usuario "${usuario}"?\n\nEsta acción no se puede deshacer.`)) {
-                return;
-            }
+            const confirmado = await mostrarConfirmacion(
+                '🗑️ Eliminar Usuario',
+                `¿Estás seguro de eliminar al usuario "${usuario}"?\n\nEsta acción no se puede deshacer.`,
+                'danger'
+            );
+
+            if (!confirmado) return;
 
             try {
                 const response = await fetch(`<?= site_url("usuarios/eliminar") ?>/${id}`, {
@@ -683,13 +819,13 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    alert('✅ ' + data.message);
-                    location.reload();
+                    mostrarToast('success', data.message);
+                    setTimeout(() => location.reload(), 1500);
                 } else {
-                    alert('❌ ' + data.message);
+                    mostrarToast('error', data.message);
                 }
             } catch (error) {
-                alert('❌ Error al eliminar el usuario');
+                mostrarToast('error', 'Error al eliminar el usuario');
                 console.error(error);
             }
         }
