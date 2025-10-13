@@ -233,25 +233,59 @@
     <!-- Navbar Superior -->
     <nav class="navbar">
         <div class="container-fluid">
-            <span class="navbar-brand">� FUDO</span>
+            <span class="navbar-brand">🍽️ FUDO</span>
             <div class="d-flex align-items-center gap-3">
-                <?php if($this->session->userdata('rol') == 'admin_sucursal'): ?>
+                <?php 
+                $rol = $this->session->userdata('rol');
+                $permisos = $this->session->userdata('permisos');
+                
+                // Función helper para verificar permisos
+                $tiene_permiso = function($seccion) use ($rol, $permisos) {
+                    // Pedidos: Solo admin_sucursal y usuarios con permiso (NO super admin)
+                    if($seccion == 'pedidos') {
+                        return $rol == 'admin_sucursal' || ($rol == 'usuario' && is_array($permisos) && isset($permisos['pedidos']) && $permisos['pedidos'] === true);
+                    }
+                    // Resto de secciones: admin y admin_sucursal tienen acceso
+                    if($rol == 'admin' || $rol == 'admin_sucursal') return true;
+                    if($rol == 'usuario' && is_array($permisos)) {
+                        return isset($permisos[$seccion]) && $permisos[$seccion] === true;
+                    }
+                    return false;
+                };
+                ?>
+                
+                <?php if($tiene_permiso('pedidos')): ?>
                     <a href="<?= site_url('admin') ?>" class="nav-link">📦 Pedidos</a>
                 <?php endif; ?>
-                <a href="<?= site_url('admin/categorias') ?>" class="nav-link">🏷️ Categorías</a>
-                <a href="<?= site_url('admin/productos') ?>" class="nav-link">🛍️ Productos</a>
-                <?php if($this->session->userdata('rol') == 'admin_sucursal'): ?>
+                
+                <?php if($tiene_permiso('categorias')): ?>
+                    <a href="<?= site_url('admin/categorias') ?>" class="nav-link">🏷️ Categorías</a>
+                <?php endif; ?>
+                
+                <?php if($tiene_permiso('productos')): ?>
+                    <a href="<?= site_url('admin/productos') ?>" class="nav-link">🛍️ Productos</a>
+                <?php endif; ?>
+                
+                <?php if($tiene_permiso('mi_carta')): ?>
                     <a href="<?= site_url('admin/mi_carta') ?>" class="nav-link">📋 Mi Carta</a>
+                <?php endif; ?>
+                
+                <?php if($tiene_permiso('mesas')): ?>
                     <a href="<?= site_url('mesas') ?>" class="nav-link">🪑 Mesas</a>
+                <?php endif; ?>
+                
+                <?php if($tiene_permiso('cocina')): ?>
                     <a href="<?= site_url('cocina') ?>" class="nav-link">🔥 Cocina</a>
                 <?php endif; ?>
-                <?php if($this->session->userdata('rol') == 'admin'): ?>
-                    <a href="<?= site_url('usuarios') ?>" class="nav-link">👥 Usuarios</a>
-                    <a href="<?= site_url('sucursales') ?>" class="nav-link active">🏢 Sucursales</a>
+                
+                <?php if($rol == 'admin' || $rol == 'admin_sucursal'): ?>
+                    <a href="<?= site_url('admin/usuarios') ?>" class="nav-link">👥 Usuarios</a>
                 <?php endif; ?>
-                <?php if($this->session->userdata('rol') == 'usuario'): ?>
-                    <span class="badge bg-info">👁️ Solo Lectura</span>
+                
+                <?php if($rol == 'admin'): ?>
+                    <a href="<?= site_url('admin/sucursales') ?>" class="nav-link active">🏢 Sucursales</a>
                 <?php endif; ?>
+                
                 <a href="<?= site_url('login/salir') ?>" class="btn btn-danger btn-action">🚪 Salir</a>
             </div>
         </div>

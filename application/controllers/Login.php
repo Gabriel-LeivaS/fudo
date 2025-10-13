@@ -21,7 +21,13 @@ class Login extends CI_Controller {
 
         $u = $this->Usuario_model->verificar_usuario($usuario,$contrasena);
         if($u){
-            // Guardar datos completos en sesión incluyendo rol y sucursal
+            // Parsear permisos si es rol usuario
+            $permisos = null;
+            if($u->rol == 'usuario' && !empty($u->permisos)) {
+                $permisos = json_decode($u->permisos, true);
+            }
+            
+            // Guardar datos completos en sesión incluyendo rol, sucursal y permisos
             $session_data = [
                 'logueado' => TRUE,
                 'id_usuario' => $u->id,
@@ -30,7 +36,8 @@ class Login extends CI_Controller {
                 'email' => $u->email,
                 'rol' => $u->rol,
                 'id_sucursal' => $u->id_sucursal,
-                'nombre_sucursal' => $u->nombre_sucursal
+                'nombre_sucursal' => $u->nombre_sucursal,
+                'permisos' => $permisos
             ];
             $this->session->set_userdata($session_data);
             redirect('admin');

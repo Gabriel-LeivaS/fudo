@@ -10,6 +10,7 @@ class Admin extends CI_Controller {
         $this->load->model('Categoria_model');
         $this->load->model('Producto_model');
         $this->load->model('Sucursal_model');
+        $this->load->model('Usuario_model');
         $this->load->library('session');
         $this->load->helper('url');
 
@@ -20,29 +21,46 @@ class Admin extends CI_Controller {
         // Obtener datos del usuario en sesión
         $this->rol = $this->session->userdata('rol');
         $this->id_sucursal = $this->session->userdata('id_sucursal');
+        $this->permisos = $this->session->userdata('permisos');
+    }
+    
+    /**
+     * Verificar si el usuario tiene permiso para acceder a una sección
+     */
+    private function tiene_permiso($seccion) {
+        // Admin y admin_sucursal tienen acceso completo
+        if($this->rol == 'admin' || $this->rol == 'admin_sucursal') {
+            return true;
+        }
+        
+        // Usuario: verificar permisos específicos
+        if($this->rol == 'usuario') {
+            if(is_array($this->permisos) && isset($this->permisos[$seccion])) {
+                return $this->permisos[$seccion] === true;
+            }
+            return false;
+        }
+        
+        return false;
     }
 
     public function index() {
-        // Si es super admin, redirigir a categorías (no debe ver pedidos)
+        // Si es super admin, mostrar dashboard general
         if($this->rol == 'admin') {
             redirect('admin/categorias');
             return;
         }
 
-        // Permitir acceso a admin_sucursal y usuario
-        if($this->rol != 'admin_sucursal' && $this->rol != 'usuario') {
+        // Permitir acceso a admin_sucursal y usuario con permiso
+        if($this->rol == 'admin_sucursal' || ($this->rol == 'usuario' && $this->tiene_permiso('pedidos'))) {
+            // Mostrar pedidos de su sucursal
+            $id_sucursal = $this->id_sucursal;
+        } else {
             show_error('No tienes permisos para acceder a esta sección', 403);
             return;
         }
-
-        // Si es usuario, redirigir a categorías (solo lectura)
-        if($this->rol == 'usuario') {
-            redirect('admin/categorias');
-            return;
-        }
         
-        // Si es admin_sucursal, mostrar pedidos de su sucursal
-        $id_sucursal = ($this->rol == 'admin_sucursal') ? $this->id_sucursal : null;
+        // Mostrar pedidos de su sucursal
         $data['pedidos'] = $this->Pedido_model->obtener_pedidos_pendientes($id_sucursal);
         $this->load->view('admin/pedidos', $data);
     }
@@ -109,8 +127,14 @@ class Admin extends CI_Controller {
     // ============================================
 
     public function categorias() {
-        // Filtrar por sucursal si es admin_sucursal
-        $id_sucursal = ($this->rol == 'admin_sucursal') ? $this->id_sucursal : null;
+        // Verificar permisos
+        if(!$this->tiene_permiso('categorias')) {
+            show_error('No tienes permisos para acceder a esta sección', 403);
+            return;
+        }
+        
+        // Filtrar por sucursal si es admin_sucursal o usuario
+        $id_sucursal = ($this->rol == 'admin_sucursal' || $this->rol == 'usuario') ? $this->id_sucursal : null;
         $data['categorias'] = $this->Categoria_model->obtener_todas($id_sucursal);
         
         // Pasar sucursales solo si es super admin
@@ -122,7 +146,7 @@ class Admin extends CI_Controller {
     }
 
     public function categoria_crear() {
-        // Validar permisos de escritura
+        // Validar permisos de escritura (solo admin y admin_sucursal)
         if($this->rol == 'usuario') {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'No tiene permisos para crear categorías']);
@@ -279,8 +303,14 @@ class Admin extends CI_Controller {
     // ============================================
 
     public function productos() {
-        // Filtrar por sucursal si es admin_sucursal
-        $id_sucursal = ($this->rol == 'admin_sucursal') ? $this->id_sucursal : null;
+        // Verificar permisos
+        if(!$this->tiene_permiso('productos')) {
+            show_error('No tienes permisos para acceder a esta sección', 403);
+            return;
+        }
+        
+        // Filtrar por sucursal si es admin_sucursal o usuario
+        $id_sucursal = ($this->rol == 'admin_sucursal' || $this->rol == 'usuario') ? $this->id_sucursal : null;
         $data['productos'] = $this->Producto_model->obtener_todos($id_sucursal);
         $data['categorias'] = $this->Categoria_model->obtener_todas($id_sucursal);
         
@@ -293,7 +323,7 @@ class Admin extends CI_Controller {
     }
 
     public function producto_crear() {
-        // Validar permisos de escritura
+        // Validar permisos de escritura (solo admin y admin_sucursal)
         if($this->rol == 'usuario') {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'No tiene permisos para crear productos']);
@@ -623,9 +653,9 @@ class Admin extends CI_Controller {
     // ============================================
     
     public function mi_carta() {
-        // Solo admin_sucursal puede ver su carta
-        if($this->rol != 'admin_sucursal') {
-            show_error('Solo los administradores de sucursal pueden ver su carta', 403);
+        // Verificar permisos
+        if(!$this->tiene_permiso('micarta')) {
+            show_error('No tienes permisos para acceder a esta sección', 403);
             return;
         }
 
@@ -654,7 +684,229 @@ class Admin extends CI_Controller {
         }
         $data['productos_por_categoria'] = $productos_por_categoria;
         
+        
         $this->load->view('admin/mi_carta', $data);
     }
+
+    // ============================================
+    // USUARIOS - Gestión de usuarios del sistema
+    // ============================================
+    
+    public function usuarios() {
+        // Verificar permisos - Solo admin y admin_sucursal
+        if(!$this->tiene_permiso('usuarios')) {
+            show_error('No tienes permisos para acceder a esta sección', 403);
+            return;
+        }
+
+        $data = [];
+        $data['rol_actual'] = $this->rol;
+        $data['id_sucursal_actual'] = $this->id_sucursal;
+        
+        // Obtener usuarios según el rol
+        if($this->rol == 'admin') {
+            // Super admin ve todos los usuarios
+            $data['usuarios'] = $this->Usuario_model->obtener_todos();
+            // Obtener todas las sucursales
+            $data['sucursales'] = $this->Sucursal_model->obtener_todas();
+        } elseif($this->rol == 'admin_sucursal') {
+            // Admin de sucursal solo ve usuarios de su sucursal
+            $data['usuarios'] = $this->Usuario_model->obtener_por_sucursal($this->id_sucursal);
+            // Obtener solo su sucursal
+            $sucursal = $this->Sucursal_model->obtener_por_id($this->id_sucursal);
+            $data['sucursales'] = $sucursal ? [$sucursal] : [];
+        }
+        
+        $this->load->view('admin/usuarios', $data);
+    }
+
+    public function usuario_crear() {
+        header('Content-Type: application/json');
+        
+        // Verificar permisos
+        if(!$this->tiene_permiso('usuarios')) {
+            echo json_encode(['success' => false, 'message' => 'No tienes permisos']);
+            return;
+        }
+        
+        // Validar datos requeridos
+        $nombre_completo = $this->input->post('nombre_completo');
+        $usuario = $this->input->post('usuario');
+        $email = $this->input->post('email');
+        $contrasena = $this->input->post('contrasena');
+        $rol = $this->input->post('rol');
+        $id_sucursal = $this->input->post('id_sucursal');
+        
+        if(empty($nombre_completo) || empty($usuario) || empty($email) || empty($contrasena) || empty($rol)) {
+            echo json_encode(['success' => false, 'message' => 'Todos los campos son obligatorios']);
+            return;
+        }
+        
+        // Verificar que no exista el usuario
+        if($this->Usuario_model->existe_usuario($usuario)) {
+            echo json_encode(['success' => false, 'message' => 'El nombre de usuario ya existe']);
+            return;
+        }
+        
+        // Verificar que no exista el email
+        if($this->Usuario_model->existe_email($email)) {
+            echo json_encode(['success' => false, 'message' => 'El email ya está registrado']);
+            return;
+        }
+        
+        // Si es admin_sucursal, usar su propia sucursal
+        if($this->rol == 'admin_sucursal') {
+            $id_sucursal = $this->id_sucursal;
+        }
+        
+        // Preparar datos
+        $datos = [
+            'nombre_completo' => $nombre_completo,
+            'usuario' => $usuario,
+            'email' => $email,
+            'contrasena' => $contrasena,
+            'rol' => $rol,
+            'id_sucursal' => $id_sucursal,
+            'activo' => true
+        ];
+        
+        // Agregar permisos si es usuario
+        if($rol == 'usuario') {
+            $permisos = [];
+            $secciones = ['pedidos', 'categorias', 'productos', 'micarta', 'mesas', 'cocina'];
+            foreach($secciones as $seccion) {
+                $permisos[$seccion] = $this->input->post('permiso_' . $seccion) == '1';
+            }
+            $datos['permisos'] = json_encode($permisos);
+        }
+        
+        // Crear usuario
+        if($this->Usuario_model->crear($datos)) {
+            echo json_encode(['success' => true, 'message' => 'Usuario creado exitosamente']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Error al crear el usuario']);
+        }
+    }
+
+    public function usuario_editar() {
+        header('Content-Type: application/json');
+        
+        // Verificar permisos
+        if(!$this->tiene_permiso('usuarios')) {
+            echo json_encode(['success' => false, 'message' => 'No tienes permisos']);
+            return;
+        }
+        
+        $id_usuario = $this->input->post('id_usuario');
+        $nombre_completo = $this->input->post('nombre_completo');
+        $usuario = $this->input->post('usuario');
+        $email = $this->input->post('email');
+        $contrasena = $this->input->post('contrasena');
+        $rol = $this->input->post('rol');
+        $id_sucursal = $this->input->post('id_sucursal');
+        
+        if(empty($id_usuario) || empty($nombre_completo) || empty($usuario) || empty($email) || empty($rol)) {
+            echo json_encode(['success' => false, 'message' => 'Todos los campos son obligatorios']);
+            return;
+        }
+        
+        // Verificar que no exista el usuario (excepto el actual)
+        if($this->Usuario_model->existe_usuario($usuario, $id_usuario)) {
+            echo json_encode(['success' => false, 'message' => 'El nombre de usuario ya existe']);
+            return;
+        }
+        
+        // Verificar que no exista el email (excepto el actual)
+        if($this->Usuario_model->existe_email($email, $id_usuario)) {
+            echo json_encode(['success' => false, 'message' => 'El email ya está registrado']);
+            return;
+        }
+        
+        // Si es admin_sucursal, usar su propia sucursal
+        if($this->rol == 'admin_sucursal') {
+            $id_sucursal = $this->id_sucursal;
+        }
+        
+        // Preparar datos
+        $datos = [
+            'nombre_completo' => $nombre_completo,
+            'usuario' => $usuario,
+            'email' => $email,
+            'rol' => $rol,
+            'id_sucursal' => $id_sucursal
+        ];
+        
+        // Solo actualizar contraseña si se proporciona
+        if(!empty($contrasena)) {
+            $datos['contrasena'] = $contrasena;
+        }
+        
+        // Agregar permisos si es usuario
+        if($rol == 'usuario') {
+            $permisos = [];
+            $secciones = ['pedidos', 'categorias', 'productos', 'micarta', 'mesas', 'cocina'];
+            foreach($secciones as $seccion) {
+                $permisos[$seccion] = $this->input->post('permiso_' . $seccion) == '1';
+            }
+            $datos['permisos'] = json_encode($permisos);
+        }
+        
+        // Actualizar usuario
+        if($this->Usuario_model->actualizar($id_usuario, $datos)) {
+            echo json_encode(['success' => true, 'message' => 'Usuario actualizado exitosamente']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Error al actualizar el usuario']);
+        }
+    }
+
+    public function usuario_eliminar() {
+        header('Content-Type: application/json');
+        
+        // Verificar permisos
+        if(!$this->tiene_permiso('usuarios')) {
+            echo json_encode(['success' => false, 'message' => 'No tienes permisos']);
+            return;
+        }
+        
+        $id_usuario = $this->input->post('id_usuario');
+        
+        if(empty($id_usuario)) {
+            echo json_encode(['success' => false, 'message' => 'ID de usuario no proporcionado']);
+            return;
+        }
+        
+        // Eliminar usuario
+        if($this->Usuario_model->eliminar($id_usuario)) {
+            echo json_encode(['success' => true, 'message' => 'Usuario eliminado exitosamente']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Error al eliminar el usuario']);
+        }
+    }
+
+    public function usuario_toggle_estado() {
+        header('Content-Type: application/json');
+        
+        // Verificar permisos
+        if(!$this->tiene_permiso('usuarios')) {
+            echo json_encode(['success' => false, 'message' => 'No tienes permisos']);
+            return;
+        }
+        
+        $id_usuario = $this->input->post('id_usuario');
+        $nuevo_estado = $this->input->post('nuevo_estado') === 'true';
+        
+        if(empty($id_usuario)) {
+            echo json_encode(['success' => false, 'message' => 'ID de usuario no proporcionado']);
+            return;
+        }
+        
+        // Cambiar estado
+        if($this->Usuario_model->cambiar_estado($id_usuario, $nuevo_estado)) {
+            echo json_encode(['success' => true, 'message' => 'Estado actualizado exitosamente']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Error al actualizar el estado']);
+        }
+    }
 }
+
 

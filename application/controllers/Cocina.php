@@ -18,9 +18,29 @@ class Cocina extends CI_Controller {
         // Cargar información del usuario si está logueado
         $this->rol = $this->session->userdata('rol');
         $this->id_sucursal = $this->session->userdata('id_sucursal');
+        $this->permisos = $this->session->userdata('permisos');
+    }
+    
+    /**
+     * Verificar si el usuario tiene permiso para cocina
+     */
+    private function tiene_permiso_cocina() {
+        if($this->rol == 'admin' || $this->rol == 'admin_sucursal') {
+            return true;
+        }
+        if($this->rol == 'usuario' && is_array($this->permisos)) {
+            return isset($this->permisos['cocina']) && $this->permisos['cocina'] === true;
+        }
+        return false;
     }
 
     public function index($id_pedido = null) {
+        // Verificar permisos
+        if(!$this->tiene_permiso_cocina()) {
+            show_error('No tienes permisos para acceder a esta sección', 403);
+            return;
+        }
+        
         $data = [];
         if($id_pedido) {
             $data['id_pedido_inicial'] = $id_pedido;

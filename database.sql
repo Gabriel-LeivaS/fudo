@@ -37,7 +37,7 @@ INSERT INTO sucursales (nombre, direccion, telefono, email) VALUES
 -- Roles disponibles:
 --   * admin: Super administrador con acceso total al sistema
 --   * admin_sucursal: Administrador de sucursal con permisos de gestión operativa
---   * usuario: Usuario con permisos de solo lectura (visualización)
+--   * usuario: Usuario con permisos personalizables (visualización y opcionalmente edición)
 -- ============================================================
 CREATE TABLE usuarios_admin (
     id SERIAL PRIMARY KEY,
@@ -47,6 +47,7 @@ CREATE TABLE usuarios_admin (
     email VARCHAR(100),
     rol VARCHAR(20) NOT NULL DEFAULT 'admin_sucursal', -- 'admin', 'admin_sucursal' o 'usuario'
     id_sucursal INT REFERENCES sucursales(id_sucursal) ON DELETE SET NULL,
+    permisos TEXT, -- JSON con permisos personalizados para rol 'usuario': {"pedidos":true,"mesas":true,"cocina":true,"mi_carta":true,"categorias":false,"productos":false}
     activo BOOLEAN DEFAULT TRUE,
     fecha_creacion TIMESTAMP DEFAULT NOW()
 );
@@ -67,13 +68,13 @@ VALUES ('admin_norte', crypt('norte123', gen_salt('bf')), 'Admin Norte', 'admin.
 INSERT INTO usuarios_admin (usuario, contrasena, nombre_completo, email, rol, id_sucursal)
 VALUES ('admin_sur', crypt('sur123', gen_salt('bf')), 'Admin Sur', 'admin.sur@fudo.cl', 'admin_sucursal', 3);
 
--- Usuario Solo Lectura - Sucursal Centro
-INSERT INTO usuarios_admin (usuario, contrasena, nombre_completo, email, rol, id_sucursal)
-VALUES ('usuario_centro', crypt('centro123', gen_salt('bf')), 'Usuario Centro', 'usuario.centro@fudo.cl', 'usuario', 1);
+-- Usuario Solo Lectura - Sucursal Centro (permisos básicos por defecto)
+INSERT INTO usuarios_admin (usuario, contrasena, nombre_completo, email, rol, id_sucursal, permisos)
+VALUES ('usuario_centro', crypt('centro123', gen_salt('bf')), 'Usuario Centro', 'usuario.centro@fudo.cl', 'usuario', 1, '{"pedidos":true,"mesas":true,"cocina":true,"mi_carta":true,"categorias":false,"productos":false}');
 
--- Usuario Solo Lectura - Sucursal Norte
-INSERT INTO usuarios_admin (usuario, contrasena, nombre_completo, email, rol, id_sucursal)
-VALUES ('usuario_norte', crypt('norte123', gen_salt('bf')), 'Usuario Norte', 'usuario.norte@fudo.cl', 'usuario', 2);
+-- Usuario Solo Lectura - Sucursal Norte (permisos completos de ejemplo)
+INSERT INTO usuarios_admin (usuario, contrasena, nombre_completo, email, rol, id_sucursal, permisos)
+VALUES ('usuario_norte', crypt('norte123', gen_salt('bf')), 'Usuario Norte', 'usuario.norte@fudo.cl', 'usuario', 2, '{"pedidos":true,"mesas":true,"cocina":true,"mi_carta":true,"categorias":true,"productos":true}');
 
 -- ============================================================
 -- PASO 3: Tabla categorias

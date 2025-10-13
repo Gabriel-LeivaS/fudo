@@ -18,9 +18,29 @@ class Mesas extends CI_Controller {
         
         $this->rol = $this->session->userdata('rol');
         $this->id_sucursal = $this->session->userdata('id_sucursal');
+        $this->permisos = $this->session->userdata('permisos');
+    }
+    
+    /**
+     * Verificar si el usuario tiene permiso para mesas
+     */
+    private function tiene_permiso_mesas() {
+        if($this->rol == 'admin' || $this->rol == 'admin_sucursal') {
+            return true;
+        }
+        if($this->rol == 'usuario' && is_array($this->permisos)) {
+            return isset($this->permisos['mesas']) && $this->permisos['mesas'] === true;
+        }
+        return false;
     }
 
     public function index() {
+        // Verificar permisos
+        if(!$this->tiene_permiso_mesas()) {
+            show_error('No tienes permisos para acceder a esta sección', 403);
+            return;
+        }
+        
         // Obtener mesas según el rol
         if($this->rol == 'admin_sucursal' || $this->rol == 'usuario') {
             $data['mesas'] = $this->Mesa_model->obtener_por_sucursal($this->id_sucursal);

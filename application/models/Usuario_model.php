@@ -90,6 +90,19 @@ class Usuario_model extends CI_Model {
      * Actualizar un usuario existente
      */
     public function actualizar($id, $datos) {
+        // DEBUG: Log en archivo personalizado
+        $log_file = FCPATH . 'debug_log.txt';
+        $timestamp = date('Y-m-d H:i:s');
+        $log_msg = "\n=== MODELO actualizar() - $timestamp ===\n";
+        $log_msg .= "ID recibido: " . $id . "\n";
+        $log_msg .= "Datos recibidos: " . print_r($datos, true) . "\n";
+        file_put_contents($log_file, $log_msg, FILE_APPEND);
+        
+        // DEBUG: Ver qué datos se intentan actualizar
+        error_log("=== MODELO actualizar() ===");
+        error_log("ID: " . $id);
+        error_log("Datos a actualizar: " . print_r($datos, true));
+        
         // Si viene contraseña nueva, encriptarla
         if (isset($datos['contrasena']) && !empty($datos['contrasena'])) {
             $this->db->query("SET search_path TO public");
@@ -100,8 +113,31 @@ class Usuario_model extends CI_Model {
             unset($datos['contrasena']);
         }
         
-        return $this->db->where('id', $id)
-                        ->update('usuarios_admin', $datos);
+        // DEBUG: Ver datos finales antes de UPDATE
+        $log_msg = "Datos finales para UPDATE: " . print_r($datos, true) . "\n";
+        file_put_contents($log_file, $log_msg, FILE_APPEND);
+        
+        error_log("Datos finales para UPDATE: " . print_r($datos, true));
+        
+        $result = $this->db->where('id', $id)
+                           ->update('usuarios_admin', $datos);
+        
+        // DEBUG: Ver resultado del UPDATE
+        $affected = $this->db->affected_rows();
+        $last_query = $this->db->last_query();
+        
+        $log_msg = "Resultado UPDATE: " . ($result ? 'TRUE' : 'FALSE') . "\n";
+        $log_msg .= "Affected rows: " . $affected . "\n";
+        $log_msg .= "Last query: " . $last_query . "\n";
+        $log_msg .= "========================================\n";
+        file_put_contents($log_file, $log_msg, FILE_APPEND);
+        
+        error_log("Resultado UPDATE: " . ($result ? 'TRUE' : 'FALSE'));
+        error_log("Affected rows: " . $this->db->affected_rows());
+        error_log("Resultado UPDATE: " . ($result ? 'TRUE' : 'FALSE'));
+        error_log("========================");
+        
+        return $result;
     }
 
     /**

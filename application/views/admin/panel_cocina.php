@@ -4,7 +4,23 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Panel Cocina - Fudo</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?fa                    <?php if($tiene_permiso('productos')): ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="<?= site_url('admin/productos') ?>">🛍️ Productos</a>
+                        </li>
+                    <?php endif; ?>
+                    
+                    <?php if($tiene_permiso('mi_carta')): ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="<?= site_url('admin/mi_carta') ?>">📋 Mi Carta</a>
+                        </li>
+                    <?php endif; ?>
+                    
+                    <?php if($tiene_permiso('mesas')): ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="<?= site_url('mesas') ?>">🪑 Mesas</a>
+                        </li>
+                    <?php endif; ?>ght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
@@ -205,22 +221,74 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
+                <?php 
+                $rol = $this->session->userdata('rol');
+                $permisos = $this->session->userdata('permisos');
+                
+                // Función helper para verificar permisos
+                $tiene_permiso = function($seccion) use ($rol, $permisos) {
+                    // Pedidos: Solo admin_sucursal y usuarios con permiso (NO super admin)
+                    if($seccion == 'pedidos') {
+                        return $rol == 'admin_sucursal' || ($rol == 'usuario' && is_array($permisos) && isset($permisos['pedidos']) && $permisos['pedidos'] === true);
+                    }
+                    // Resto de secciones: admin y admin_sucursal tienen acceso
+                    if($rol == 'admin' || $rol == 'admin_sucursal') return true;
+                    if($rol == 'usuario' && is_array($permisos)) {
+                        return isset($permisos[$seccion]) && $permisos[$seccion] === true;
+                    }
+                    return false;
+                };
+                ?>
+                
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="<?= site_url('admin') ?>">📦 Pedidos</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="<?= site_url('admin/categorias') ?>">🏷️ Categorías</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="<?= site_url('admin/productos') ?>">📦 Productos</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="<?= site_url('mesas') ?>">🪑 Mesas</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="<?= site_url('cocina') ?>">👨‍🍳 Cocina</a>
-                    </li>
+                    <?php if($tiene_permiso('pedidos')): ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="<?= site_url('admin') ?>">📦 Pedidos</a>
+                        </li>
+                    <?php endif; ?>
+                    
+                    <?php if($tiene_permiso('categorias')): ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="<?= site_url('admin/categorias') ?>">🏷️ Categorías</a>
+                        </li>
+                    <?php endif; ?>
+                    
+                    <?php if($tiene_permiso('productos')): ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="<?= site_url('admin/productos') ?>">�️ Productos</a>
+                        </li>
+                    <?php endif; ?>
+                    
+                    <?php if($tiene_permiso('micarta')): ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="<?= site_url('admin/mi_carta') ?>">📋 Mi Carta</a>
+                        </li>
+                    <?php endif; ?>
+                    
+                    <?php if($tiene_permiso('mesas')): ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="<?= site_url('mesas') ?>">🪑 Mesas</a>
+                        </li>
+                    <?php endif; ?>
+                    
+                    <?php if($tiene_permiso('cocina')): ?>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="<?= site_url('cocina') ?>">👨‍🍳 Cocina</a>
+                        </li>
+                    <?php endif; ?>
+                    
+                    <?php if($rol == 'admin' || $rol == 'admin_sucursal'): ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="<?= site_url('admin/usuarios') ?>">👥 Usuarios</a>
+                        </li>
+                    <?php endif; ?>
+                    
+                    <?php if($rol == 'admin'): ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="<?= site_url('admin/sucursales') ?>">🏢 Sucursales</a>
+                        </li>
+                    <?php endif; ?>
+                    
                     <li class="nav-item">
                         <a class="nav-link" href="<?= site_url('login/salir') ?>" style="color: #dc3545 !important;">🚪 Salir</a>
                     </li>

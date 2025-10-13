@@ -263,11 +263,57 @@
         <div class="container-fluid">
             <span class="navbar-brand">🍽️ FUDO</span>
             <div class="d-flex align-items-center gap-3">
-                <a href="<?= site_url('admin') ?>" class="nav-link">📊 Dashboard</a>
-                <a href="<?= site_url('admin/categorias') ?>" class="nav-link">🏷️ Categorías</a>
-                <a href="<?= site_url('admin/productos') ?>" class="nav-link">🛍️ Productos</a>
-                <a href="<?= site_url('usuarios') ?>" class="nav-link active">👥 Usuarios</a>
-                <a href="<?= site_url('sucursales') ?>" class="nav-link">🏢 Sucursales</a>
+                <?php 
+                $rol = $this->session->userdata('rol');
+                $permisos = $this->session->userdata('permisos');
+                
+                // Función helper para verificar permisos
+                $tiene_permiso = function($seccion) use ($rol, $permisos) {
+                    // Pedidos: Solo admin_sucursal y usuarios con permiso (NO super admin)
+                    if($seccion == 'pedidos') {
+                        return $rol == 'admin_sucursal' || ($rol == 'usuario' && is_array($permisos) && isset($permisos['pedidos']) && $permisos['pedidos'] === true);
+                    }
+                    // Resto de secciones: admin y admin_sucursal tienen acceso
+                    if($rol == 'admin' || $rol == 'admin_sucursal') return true;
+                    if($rol == 'usuario' && is_array($permisos)) {
+                        return isset($permisos[$seccion]) && $permisos[$seccion] === true;
+                    }
+                    return false;
+                };
+                ?>
+                
+                <?php if($tiene_permiso('pedidos')): ?>
+                    <a href="<?= site_url('admin') ?>" class="nav-link">� Pedidos</a>
+                <?php endif; ?>
+                
+                <?php if($tiene_permiso('categorias')): ?>
+                    <a href="<?= site_url('admin/categorias') ?>" class="nav-link">🏷️ Categorías</a>
+                <?php endif; ?>
+                
+                <?php if($tiene_permiso('productos')): ?>
+                    <a href="<?= site_url('admin/productos') ?>" class="nav-link">🛍️ Productos</a>
+                <?php endif; ?>
+                
+                <?php if($tiene_permiso('micarta')): ?>
+                    <a href="<?= site_url('admin/mi_carta') ?>" class="nav-link">📋 Mi Carta</a>
+                <?php endif; ?>
+                
+                <?php if($tiene_permiso('mesas')): ?>
+                    <a href="<?= site_url('mesas') ?>" class="nav-link">🪑 Mesas</a>
+                <?php endif; ?>
+                
+                <?php if($tiene_permiso('cocina')): ?>
+                    <a href="<?= site_url('cocina') ?>" class="nav-link">🔥 Cocina</a>
+                <?php endif; ?>
+                
+                <?php if($rol == 'admin' || $rol == 'admin_sucursal'): ?>
+                    <a href="<?= site_url('admin/usuarios') ?>" class="nav-link active">👥 Usuarios</a>
+                <?php endif; ?>
+                
+                <?php if($rol == 'admin'): ?>
+                    <a href="<?= site_url('admin/sucursales') ?>" class="nav-link">🏢 Sucursales</a>
+                <?php endif; ?>
+                
                 <a href="<?= site_url('login/salir') ?>" class="btn btn-danger btn-action">🚪 Salir</a>
             </div>
         </div>
@@ -488,6 +534,52 @@
                                 <?php endforeach; ?>
                             </select>
                         </div>
+                        
+                        <!-- Permisos para rol usuario -->
+                        <div class="mb-3 permisos-field" id="permisosFieldCrear" style="display: none;">
+                            <label class="form-label">🔐 Permisos de Acceso</label>
+                            <div class="card">
+                                <div class="card-body">
+                                    <small class="text-muted d-block mb-2">Selecciona las ventanas a las que este usuario tendrá acceso:</small>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" name="permisos[pedidos]" id="permisoCrearPedidos">
+                                        <label class="form-check-label" for="permisoCrearPedidos">
+                                            📦 Pedidos
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" name="permisos[categorias]" id="permisoCrearCategorias">
+                                        <label class="form-check-label" for="permisoCrearCategorias">
+                                            🏷️ Categorías
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" name="permisos[productos]" id="permisoCrearProductos">
+                                        <label class="form-check-label" for="permisoCrearProductos">
+                                            🛍️ Productos
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" name="permisos[mi_carta]" id="permisoCrearMicarta">
+                                        <label class="form-check-label" for="permisoCrearMicarta">
+                                            📋 Mi Carta
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" name="permisos[mesas]" id="permisoCrearMesas">
+                                        <label class="form-check-label" for="permisoCrearMesas">
+                                            🪑 Mesas
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="permisos[cocina]" id="permisoCrearCocina">
+                                        <label class="form-check-label" for="permisoCrearCocina">
+                                            🔥 Cocina
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
@@ -560,6 +652,52 @@
                                 <?php endforeach; ?>
                             </select>
                         </div>
+                        
+                        <!-- Permisos para rol usuario -->
+                        <div class="mb-3 permisos-field" id="permisosFieldEditar" style="display: none;">
+                            <label class="form-label">🔐 Permisos de Acceso</label>
+                            <div class="card">
+                                <div class="card-body">
+                                    <small class="text-muted d-block mb-2">Selecciona las ventanas a las que este usuario tendrá acceso:</small>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" name="permisos[pedidos]" id="permisoEditarPedidos">
+                                        <label class="form-check-label" for="permisoEditarPedidos">
+                                            📦 Pedidos
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" name="permisos[categorias]" id="permisoEditarCategorias">
+                                        <label class="form-check-label" for="permisoEditarCategorias">
+                                            🏷️ Categorías
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" name="permisos[productos]" id="permisoEditarProductos">
+                                        <label class="form-check-label" for="permisoEditarProductos">
+                                            🛍️ Productos
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" name="permisos[mi_carta]" id="permisoEditarMicarta">
+                                        <label class="form-check-label" for="permisoEditarMicarta">
+                                            📋 Mi Carta
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" name="permisos[mesas]" id="permisoEditarMesas">
+                                        <label class="form-check-label" for="permisoEditarMesas">
+                                            🪑 Mesas
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="permisos[cocina]" id="permisoEditarCocina">
+                                        <label class="form-check-label" for="permisoEditarCocina">
+                                            🔥 Cocina
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
@@ -627,6 +765,30 @@
                 document.getElementById('sucursalFieldEditar').classList.remove('show');
                 document.getElementById('editarSucursal').required = false;
             }
+            
+            // Mostrar y cargar permisos SOLO para rol usuario
+            const permisosFieldEditar = document.getElementById('permisosFieldEditar');
+            if (usuario.rol === 'usuario') {
+                permisosFieldEditar.style.display = 'block';
+                
+                // Parsear permisos (puede ser string JSON o ya objeto)
+                let permisos = {};
+                try {
+                    permisos = typeof usuario.permisos === 'string' ? JSON.parse(usuario.permisos) : (usuario.permisos || {});
+                } catch (e) {
+                    permisos = {};
+                }
+                
+                // Marcar checkboxes según permisos actuales
+                document.getElementById('permisoEditarPedidos').checked = permisos.pedidos === true;
+                document.getElementById('permisoEditarCategorias').checked = permisos.categorias === true;
+                document.getElementById('permisoEditarProductos').checked = permisos.productos === true;
+                document.getElementById('permisoEditarMicarta').checked = permisos.mi_carta === true;
+                document.getElementById('permisoEditarMesas').checked = permisos.mesas === true;
+                document.getElementById('permisoEditarCocina').checked = permisos.cocina === true;
+            } else {
+                permisosFieldEditar.style.display = 'none';
+            }
 
             new bootstrap.Modal(document.getElementById('modalEditar')).show();
         }
@@ -635,6 +797,9 @@
             const rol = document.getElementById(`${tipo === 'crear' ? 'rolCrear' : 'editarRol'}`).value;
             const field = document.getElementById(`sucursalField${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
             const select = field.querySelector('select');
+            
+            // Obtener campo de permisos
+            const permisosField = document.getElementById(`permisosField${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
 
             // Mostrar campo de sucursal para admin_sucursal y usuario
             if (rol === 'admin_sucursal' || rol === 'usuario') {
@@ -644,6 +809,16 @@
                 field.classList.remove('show');
                 select.required = false;
                 select.value = '';
+            }
+            
+            // Mostrar campo de permisos SOLO para rol usuario
+            if (rol === 'usuario') {
+                permisosField.style.display = 'block';
+            } else {
+                permisosField.style.display = 'none';
+                // Desmarcar todos los checkboxes si no es usuario
+                const checkboxes = permisosField.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(cb => cb.checked = false);
             }
         }
 
@@ -727,6 +902,14 @@
         async function crearUsuario(e) {
             e.preventDefault();
             const formData = new FormData(e.target);
+            
+            // Los checkboxes ya vienen como permisos[*] del formulario
+            // Solo asegurarnos que los NO marcados también se envíen
+            const rol = formData.get('rol');
+            if (rol === 'usuario') {
+                // Solo los checkboxes marcados se envían, los no marcados no
+                // El backend los maneja con isset() así que está bien
+            }
 
             try {
                 const response = await fetch('<?= site_url("usuarios/crear") ?>', {
@@ -752,6 +935,23 @@
             e.preventDefault();
             const formData = new FormData(e.target);
             const id = formData.get('id_usuario');
+            
+            // DEBUG COMPLETO: Mostrar todos los datos que se van a enviar
+            console.log('=== DEBUG EDITAR USUARIO ===');
+            console.log('ID Usuario:', id);
+            console.log('Rol seleccionado:', formData.get('rol'));
+            console.log('\nTodos los campos del FormData:');
+            for (let [key, value] of formData.entries()) {
+                console.log(`  ${key}: ${value}`);
+            }
+            console.log('\nEstado de checkboxes de permisos:');
+            console.log('  permisoEditarPedidos:', document.getElementById('permisoEditarPedidos').checked);
+            console.log('  permisoEditarCategorias:', document.getElementById('permisoEditarCategorias').checked);
+            console.log('  permisoEditarProductos:', document.getElementById('permisoEditarProductos').checked);
+            console.log('  permisoEditarMicarta:', document.getElementById('permisoEditarMicarta').checked);
+            console.log('  permisoEditarMesas:', document.getElementById('permisoEditarMesas').checked);
+            console.log('  permisoEditarCocina:', document.getElementById('permisoEditarCocina').checked);
+            console.log('========================');
 
             try {
                 const response = await fetch(`<?= site_url("usuarios/editar") ?>/${id}`, {
@@ -760,16 +960,60 @@
                 });
 
                 const data = await response.json();
+                
+                console.log('Respuesta del servidor:', data);
 
                 if (data.success) {
-                    mostrarToast('success', data.message);
-                    setTimeout(() => location.reload(), 1500);
+                    // Cerrar modal PRIMERO
+                    const modalEl = document.getElementById('modalEditar');
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    if (modal) {
+                        modal.hide();
+                    }
+                    
+                    // Esperar a que el modal se cierre completamente antes de mostrar toast
+                    modalEl.addEventListener('hidden.bs.modal', function onModalHidden() {
+                        // Remover listener para evitar duplicados
+                        modalEl.removeEventListener('hidden.bs.modal', onModalHidden);
+                        
+                        // Mostrar toast de éxito
+                        mostrarToast('success', data.message);
+                        
+                        // Actualizar el array de usuarios en memoria para reflejar cambios
+                        const usuarioIndex = usuarios.findIndex(u => u.id_usuario == id);
+                        if (usuarioIndex !== -1) {
+                            // Actualizar datos básicos
+                            usuarios[usuarioIndex].usuario = formData.get('usuario');
+                            usuarios[usuarioIndex].nombre_completo = formData.get('nombre_completo');
+                            usuarios[usuarioIndex].email = formData.get('email');
+                            usuarios[usuarioIndex].rol = formData.get('rol');
+                            usuarios[usuarioIndex].id_sucursal = formData.get('id_sucursal');
+                            
+                            // Construir objeto de permisos desde checkboxes
+                            if (formData.get('rol') === 'usuario') {
+                                const permisosActualizados = {
+                                    pedidos: document.getElementById('permisoEditarPedidos').checked,
+                                    categorias: document.getElementById('permisoEditarCategorias').checked,
+                                    productos: document.getElementById('permisoEditarProductos').checked,
+                                    mi_carta: document.getElementById('permisoEditarMicarta').checked,
+                                    mesas: document.getElementById('permisoEditarMesas').checked,
+                                    cocina: document.getElementById('permisoEditarCocina').checked
+                                };
+                                usuarios[usuarioIndex].permisos = JSON.stringify(permisosActualizados);
+                            } else {
+                                usuarios[usuarioIndex].permisos = null;
+                            }
+                        }
+                        
+                        // Recargar página después de 2 segundos para refrescar la tabla
+                        setTimeout(() => location.reload(), 2000);
+                    }, { once: true });
                 } else {
                     mostrarToast('error', data.message);
                 }
             } catch (error) {
                 mostrarToast('error', 'Error al actualizar el usuario');
-                console.error(error);
+                console.error('Error completo:', error);
             }
         }
 
