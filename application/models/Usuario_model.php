@@ -26,7 +26,7 @@ class Usuario_model extends CI_Model {
      * Obtener todos los usuarios
      */
     public function obtener_todos() {
-        return $this->db->select('u.id as id_usuario, u.*, s.nombre as nombre_sucursal')
+        return $this->db->select('u.*, u.id as id_usuario, s.nombre as nombre_sucursal')
                         ->from('usuarios_admin u')
                         ->join('sucursales s', 'u.id_sucursal = s.id_sucursal', 'left')
                         ->order_by('u.nombre_completo', 'ASC')
@@ -38,7 +38,7 @@ class Usuario_model extends CI_Model {
      * Obtener usuarios por rol
      */
     public function obtener_por_rol($rol) {
-        return $this->db->select('u.id as id_usuario, u.*, s.nombre as nombre_sucursal')
+        return $this->db->select('u.*, u.id as id_usuario, s.nombre as nombre_sucursal')
                         ->from('usuarios_admin u')
                         ->join('sucursales s', 'u.id_sucursal = s.id_sucursal', 'left')
                         ->where('u.rol', $rol)
@@ -51,7 +51,7 @@ class Usuario_model extends CI_Model {
      * Obtener usuarios de una sucursal específica
      */
     public function obtener_por_sucursal($id_sucursal) {
-        return $this->db->select('u.id as id_usuario, u.*, s.nombre as nombre_sucursal')
+        return $this->db->select('u.*, u.id as id_usuario, s.nombre as nombre_sucursal')
                         ->from('usuarios_admin u')
                         ->join('sucursales s', 'u.id_sucursal = s.id_sucursal', 'left')
                         ->where('u.id_sucursal', $id_sucursal)
@@ -64,7 +64,7 @@ class Usuario_model extends CI_Model {
      * Obtener un usuario por ID
      */
     public function obtener_por_id($id) {
-        return $this->db->select('u.id as id_usuario, u.*, s.nombre as nombre_sucursal')
+        return $this->db->select('u.*, u.id as id_usuario, s.nombre as nombre_sucursal')
                         ->from('usuarios_admin u')
                         ->join('sucursales s', 'u.id_sucursal = s.id_sucursal', 'left')
                         ->where('u.id', $id)
@@ -90,18 +90,6 @@ class Usuario_model extends CI_Model {
      * Actualizar un usuario existente
      */
     public function actualizar($id, $datos) {
-        // DEBUG: Log en archivo personalizado
-        $log_file = FCPATH . 'debug_log.txt';
-        $timestamp = date('Y-m-d H:i:s');
-        $log_msg = "\n=== MODELO actualizar() - $timestamp ===\n";
-        $log_msg .= "ID recibido: " . $id . "\n";
-        $log_msg .= "Datos recibidos: " . print_r($datos, true) . "\n";
-        file_put_contents($log_file, $log_msg, FILE_APPEND);
-        
-        // DEBUG: Ver qué datos se intentan actualizar
-        error_log("=== MODELO actualizar() ===");
-        error_log("ID: " . $id);
-        error_log("Datos a actualizar: " . print_r($datos, true));
         
         // Si viene contraseña nueva, encriptarla
         if (isset($datos['contrasena']) && !empty($datos['contrasena'])) {
@@ -113,29 +101,8 @@ class Usuario_model extends CI_Model {
             unset($datos['contrasena']);
         }
         
-        // DEBUG: Ver datos finales antes de UPDATE
-        $log_msg = "Datos finales para UPDATE: " . print_r($datos, true) . "\n";
-        file_put_contents($log_file, $log_msg, FILE_APPEND);
-        
-        error_log("Datos finales para UPDATE: " . print_r($datos, true));
-        
         $result = $this->db->where('id', $id)
                            ->update('usuarios_admin', $datos);
-        
-        // DEBUG: Ver resultado del UPDATE
-        $affected = $this->db->affected_rows();
-        $last_query = $this->db->last_query();
-        
-        $log_msg = "Resultado UPDATE: " . ($result ? 'TRUE' : 'FALSE') . "\n";
-        $log_msg .= "Affected rows: " . $affected . "\n";
-        $log_msg .= "Last query: " . $last_query . "\n";
-        $log_msg .= "========================================\n";
-        file_put_contents($log_file, $log_msg, FILE_APPEND);
-        
-        error_log("Resultado UPDATE: " . ($result ? 'TRUE' : 'FALSE'));
-        error_log("Affected rows: " . $this->db->affected_rows());
-        error_log("Resultado UPDATE: " . ($result ? 'TRUE' : 'FALSE'));
-        error_log("========================");
         
         return $result;
     }

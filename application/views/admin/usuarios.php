@@ -367,6 +367,7 @@
                             <option value="">Todos los roles</option>
                             <option value="admin">Super Admin</option>
                             <option value="admin_sucursal">Admin Sucursal</option>
+                            <option value="usuario">Usuario</option>
                         </select>
                     </div>
                     <div class="filter-group">
@@ -423,8 +424,10 @@
                                                 <span class="badge bg-primary">⭐ Super Admin</span>
                                             <?php elseif ($usuario->rol == 'admin_sucursal'): ?>
                                                 <span class="badge bg-warning">👤 Admin Sucursal</span>
+                                            <?php elseif ($usuario->rol == 'usuario'): ?>
+                                                <span class="badge bg-info">👁️ Usuario</span>
                                             <?php else: ?>
-                                                <span class="badge bg-secondary">👁️ Usuario</span>
+                                                <span class="badge bg-secondary">❓ <?= htmlspecialchars($usuario->rol) ?></span>
                                             <?php endif; ?>
                                         </td>
                                         <td>
@@ -602,7 +605,7 @@
                     <h5>✏️ Editar Usuario</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form id="formEditar" onsubmit="editarUsuario(event)">
+                <form id="formEditar">
                     <input type="hidden" name="id_usuario" id="editarId">
                     <div class="modal-body">
                         <div class="mb-3">
@@ -703,7 +706,7 @@
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                             ❌ Cancelar
                         </button>
-                        <button type="submit" class="btn btn-primary">
+                        <button type="button" class="btn btn-primary" id="btnGuardarEdicion">
                             💾 Actualizar Usuario
                         </button>
                     </div>
@@ -738,6 +741,21 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const usuarios = <?= json_encode($usuarios) ?>;
+        
+        // Inicializar evento del formulario de edición después de que el DOM esté listo
+        document.addEventListener('DOMContentLoaded', function() {
+            // Evento para el botón de guardar edición
+            document.getElementById('btnGuardarEdicion').addEventListener('click', function(e) {
+                e.preventDefault();
+                editarUsuario(e);
+            });
+            
+            // También manejar el evento submit del formulario
+            document.getElementById('formEditar').addEventListener('submit', function(e) {
+                e.preventDefault();
+                editarUsuario(e);
+            });
+        });
 
         function abrirModalCrear() {
             document.getElementById('formCrear').reset();
@@ -746,10 +764,16 @@
         }
 
         function abrirModalEditar(id) {
-            const usuario = usuarios.find(u => u.id_usuario == id);
-            if (!usuario) return;
+            console.log('Abriendo modal para editar usuario ID:', id);
+            const usuario = usuarios.find(u => u.id_usuario == id || u.id == id);
+            if (!usuario) {
+                console.error('Usuario no encontrado con ID:', id);
+                mostrarToast('error', 'Usuario no encontrado');
+                return;
+            }
+            console.log('Usuario encontrado:', usuario);
 
-            document.getElementById('editarId').value = usuario.id_usuario;
+            document.getElementById('editarId').value = usuario.id_usuario || usuario.id;
             document.getElementById('editarUsuario').value = usuario.usuario;
             document.getElementById('editarNombre').value = usuario.nombre_completo;
             document.getElementById('editarEmail').value = usuario.email;
@@ -757,13 +781,21 @@
             document.getElementById('editarContrasena').value = '';
             
             // Mostrar campo sucursal para admin_sucursal y usuario
+            const sucursalField = document.getElementById('sucursalFieldEditar');
+            const sucursalSelect = document.getElementById('editarSucursal');
+            
             if (usuario.rol === 'admin_sucursal' || usuario.rol === 'usuario') {
-                document.getElementById('sucursalFieldEditar').classList.add('show');
-                document.getElementById('editarSucursal').value = usuario.id_sucursal || '';
-                document.getElementById('editarSucursal').required = true;
+                // Usar style.display además de las clases para asegurar visibilidad
+                sucursalField.style.display = 'block';
+                sucursalField.classList.add('show');
+                sucursalSelect.value = usuario.id_sucursal || '';
+                sucursalSelect.required = true;
             } else {
-                document.getElementById('sucursalFieldEditar').classList.remove('show');
-                document.getElementById('editarSucursal').required = false;
+                sucursalField.style.display = 'none';
+                sucursalField.classList.remove('show');
+                sucursalSelect.required = false;
+                // Limpiar valor solo si es admin (que no necesita sucursal)
+                sucursalSelect.value = '';
             }
             
             // Mostrar y cargar permisos SOLO para rol usuario
@@ -803,12 +835,16 @@
 
             // Mostrar campo de sucursal para admin_sucursal y usuario
             if (rol === 'admin_sucursal' || rol === 'usuario') {
+                // Usar style.display en lugar de clases CSS para mayor fiabilidad
+                field.style.display = 'block';
                 field.classList.add('show');
                 select.required = true;
             } else {
+                field.style.display = 'none';
                 field.classList.remove('show');
                 select.required = false;
-                select.value = '';
+                // NO limpiar el valor, solo ocultarlo
+                // select.value = ''; // COMENTADO: No limpiar para preservar el valor
             }
             
             // Mostrar campo de permisos SOLO para rol usuario
@@ -816,9 +852,11 @@
                 permisosField.style.display = 'block';
             } else {
                 permisosField.style.display = 'none';
-                // Desmarcar todos los checkboxes si no es usuario
-                const checkboxes = permisosField.querySelectorAll('input[type="checkbox"]');
-                checkboxes.forEach(cb => cb.checked = false);
+                // Solo desmarcar checkboxes si NO estamos editando
+                if (tipo === 'crear') {
+                    const checkboxes = permisosField.querySelectorAll('input[type="checkbox"]');
+                    checkboxes.forEach(cb => cb.checked = false);
+                }
             }
         }
 
@@ -933,8 +971,33 @@
 
         async function editarUsuario(e) {
             e.preventDefault();
-            const formData = new FormData(e.target);
+            
+            // Prevenir cierre automático del modal
+            e.stopPropagation();
+            
+            // Obtener el formulario correctamente
+            const form = document.getElementById('formEditar');
+            const formData = new FormData(form);
             const id = formData.get('id_usuario');
+            
+            // Validación básica
+            if (!id) {
+                mostrarToast('error', 'Error: No se pudo identificar el usuario a editar');
+                console.error('ID de usuario no encontrado');
+                return;
+            }
+            
+            // Asegurar que id_sucursal se envíe correctamente
+            const rol = formData.get('rol');
+            const idSucursal = formData.get('id_sucursal');
+            
+            // Si el rol requiere sucursal pero no se envió, obtenerla del select
+            if ((rol === 'admin_sucursal' || rol === 'usuario') && !idSucursal) {
+                const sucursalSelect = document.getElementById('editarSucursal');
+                if (sucursalSelect && sucursalSelect.value) {
+                    formData.set('id_sucursal', sucursalSelect.value);
+                }
+            }
             
             // DEBUG COMPLETO: Mostrar todos los datos que se van a enviar
             console.log('=== DEBUG EDITAR USUARIO ===');
@@ -954,14 +1017,31 @@
             console.log('========================');
 
             try {
+                console.log('Enviando petición a:', `<?= site_url("usuarios/editar") ?>/${id}`);
                 const response = await fetch(`<?= site_url("usuarios/editar") ?>/${id}`, {
                     method: 'POST',
                     body: formData
                 });
 
-                const data = await response.json();
+                // Verificar que la respuesta sea válida
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 
-                console.log('Respuesta del servidor:', data);
+                const text = await response.text();
+                console.log('Respuesta raw del servidor:', text);
+                
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (parseError) {
+                    console.error('Error al parsear respuesta JSON:', parseError);
+                    console.error('Respuesta recibida:', text);
+                    mostrarToast('error', 'Error en la respuesta del servidor');
+                    return;
+                }
+                
+                console.log('Respuesta parseada:', data);
 
                 if (data.success) {
                     // Cerrar modal PRIMERO
@@ -980,7 +1060,7 @@
                         mostrarToast('success', data.message);
                         
                         // Actualizar el array de usuarios en memoria para reflejar cambios
-                        const usuarioIndex = usuarios.findIndex(u => u.id_usuario == id);
+                        const usuarioIndex = usuarios.findIndex(u => u.id_usuario == id || u.id == id);
                         if (usuarioIndex !== -1) {
                             // Actualizar datos básicos
                             usuarios[usuarioIndex].usuario = formData.get('usuario');
@@ -1009,11 +1089,12 @@
                         setTimeout(() => location.reload(), 2000);
                     }, { once: true });
                 } else {
-                    mostrarToast('error', data.message);
+                    console.error('Error del servidor:', data.message);
+                    mostrarToast('error', data.message || 'Error al actualizar el usuario');
                 }
             } catch (error) {
-                mostrarToast('error', 'Error al actualizar el usuario');
                 console.error('Error completo:', error);
+                mostrarToast('error', 'Error al actualizar el usuario: ' + error.message);
             }
         }
 
