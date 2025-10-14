@@ -47,6 +47,7 @@
             border-radius: 8px;
             transition: all 0.3s ease;
             text-decoration: none;
+            white-space: nowrap; 
         }
         
         .nav-link:hover {
@@ -57,6 +58,7 @@
         .nav-link.active {
             background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
             color: white;
+            white-space: nowrap; 
         }
         
         /* Admin Header */

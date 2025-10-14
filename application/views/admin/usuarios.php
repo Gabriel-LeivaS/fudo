@@ -210,11 +210,17 @@
             padding: 8px 16px;
             border-radius: 8px;
             transition: all 0.3s ease;
+            white-space: nowrap; 
         }
 
         .nav-link:hover {
             background: var(--bg-light);
             color: var(--accent);
+        }
+
+        .nav-link.active {
+        background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+        color: white;
         }
 
         .filters {

@@ -53,5 +53,9 @@ $route['default_controller'] = 'welcome';
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;
 
+// Rutas para el controlador de Sucursales
+$route['admin/sucursales'] = 'sucursales';
+$route['admin/sucursales/(:any)'] = 'sucursales/$1';
+
 // Ruta amigable para mesas — ejemplo: /mesa/1
 $route['mesa/(:num)'] = 'carta/index/$1';

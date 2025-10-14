@@ -4,23 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Panel Cocina - Fudo</title>
-    <link href="https://fonts.googleapis.com/css2?fa                    <?php if($tiene_permiso('productos')): ?>
-                        <li class="nav-item">
-                            <a class="nav-link" href="<?= site_url('admin/productos') ?>">🛍️ Productos</a>
-                        </li>
-                    <?php endif; ?>
-                    
-                    <?php if($tiene_permiso('mi_carta')): ?>
-                        <li class="nav-item">
-                            <a class="nav-link" href="<?= site_url('admin/mi_carta') ?>">📋 Mi Carta</a>
-                        </li>
-                    <?php endif; ?>
-                    
-                    <?php if($tiene_permiso('mesas')): ?>
-                        <li class="nav-item">
-                            <a class="nav-link" href="<?= site_url('mesas') ?>">🪑 Mesas</a>
-                        </li>
-                    <?php endif; ?>ght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
@@ -213,14 +197,11 @@
     </style>
 </head>
 <body>
-    <!-- Navbar moderna -->
-    <nav class="navbar navbar-expand-lg sticky-top">
+    <!-- Navbar Superior -->
+    <nav class="navbar">
         <div class="container-fluid">
-            <a class="navbar-brand" href="<?= site_url('admin') ?>">🍽️ FUDO</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
+            <span class="navbar-brand">🍽️ FUDO</span>
+            <div class="d-flex align-items-center gap-3">
                 <?php 
                 $rol = $this->session->userdata('rol');
                 $permisos = $this->session->userdata('permisos');
@@ -240,64 +221,44 @@
                 };
                 ?>
                 
-                <ul class="navbar-nav ms-auto">
-                    <?php if($tiene_permiso('pedidos')): ?>
-                        <li class="nav-item">
-                            <a class="nav-link" href="<?= site_url('admin') ?>">📦 Pedidos</a>
-                        </li>
-                    <?php endif; ?>
-                    
-                    <?php if($tiene_permiso('categorias')): ?>
-                        <li class="nav-item">
-                            <a class="nav-link" href="<?= site_url('admin/categorias') ?>">🏷️ Categorías</a>
-                        </li>
-                    <?php endif; ?>
-                    
-                    <?php if($tiene_permiso('productos')): ?>
-                        <li class="nav-item">
-                            <a class="nav-link" href="<?= site_url('admin/productos') ?>">�️ Productos</a>
-                        </li>
-                    <?php endif; ?>
-                    
-                    <?php if($tiene_permiso('micarta')): ?>
-                        <li class="nav-item">
-                            <a class="nav-link" href="<?= site_url('admin/mi_carta') ?>">📋 Mi Carta</a>
-                        </li>
-                    <?php endif; ?>
-                    
-                    <?php if($tiene_permiso('mesas')): ?>
-                        <li class="nav-item">
-                            <a class="nav-link" href="<?= site_url('mesas') ?>">🪑 Mesas</a>
-                        </li>
-                    <?php endif; ?>
-                    
-                    <?php if($tiene_permiso('cocina')): ?>
-                        <li class="nav-item">
-                            <a class="nav-link active" href="<?= site_url('cocina') ?>">👨‍🍳 Cocina</a>
-                        </li>
-                    <?php endif; ?>
-                    
-                    <?php if($rol == 'admin' || $rol == 'admin_sucursal'): ?>
-                        <li class="nav-item">
-                            <a class="nav-link" href="<?= site_url('admin/usuarios') ?>">👥 Usuarios</a>
-                        </li>
-                    <?php endif; ?>
-                    
-                    <?php if($rol == 'admin'): ?>
-                        <li class="nav-item">
-                            <a class="nav-link" href="<?= site_url('admin/sucursales') ?>">🏢 Sucursales</a>
-                        </li>
-                    <?php endif; ?>
-                    
-                    <li class="nav-item">
-                        <a class="nav-link" href="<?= site_url('login/salir') ?>" style="color: #dc3545 !important;">🚪 Salir</a>
-                    </li>
-                </ul>
+                <?php if($tiene_permiso('pedidos')): ?>
+                    <a href="<?= site_url('admin') ?>" class="nav-link">📦 Pedidos</a>
+                <?php endif; ?>
+                
+                <?php if($tiene_permiso('categorias')): ?>
+                    <a href="<?= site_url('admin/categorias') ?>" class="nav-link">🏷️ Categorías</a>
+                <?php endif; ?>
+                
+                <?php if($tiene_permiso('productos')): ?>
+                    <a href="<?= site_url('admin/productos') ?>" class="nav-link">🛍️ Productos</a>
+                <?php endif; ?>
+                
+                <?php if($tiene_permiso('mi_carta')): ?>
+                    <a href="<?= site_url('admin/mi_carta') ?>" class="nav-link">📋 Mi Carta</a>
+                <?php endif; ?>
+                
+                <?php if($tiene_permiso('mesas')): ?>
+                    <a href="<?= site_url('mesas') ?>" class="nav-link">🪑 Mesas</a>
+                <?php endif; ?>
+                
+                <?php if($tiene_permiso('cocina')): ?>
+                    <a href="<?= site_url('cocina') ?>" class="nav-link active">🔥 Cocina</a>
+                <?php endif; ?>
+                
+                <?php if($rol == 'admin' || $rol == 'admin_sucursal'): ?>
+                    <a href="<?= site_url('admin/usuarios') ?>" class="nav-link">👥 Usuarios</a>
+                <?php endif; ?>
+                
+                <?php if($rol == 'admin'): ?>
+                    <a href="<?= site_url('admin/sucursales') ?>" class="nav-link">🏢 Sucursales</a>
+                <?php endif; ?>
+                
+                <a href="<?= site_url('login/salir') ?>" class="btn btn-danger btn-action">🚪 Salir</a>
             </div>
         </div>
     </nav>
 
-    <div class="container-fluid" style="max-width: 95%;">
+    <div class="container-fluid">
         <!-- Admin Header -->
         <div class="admin-header">
             <h1>👨‍🍳 Panel de Cocina</h1>
