@@ -118,7 +118,7 @@ class Admin extends CI_Controller {
 
     public function actualizar_estado() {
         // Validar permisos de escritura
-        if($this->rol == 'usuario') {
+        if(!$this->tiene_permiso('pedidos')) {
             echo json_encode(['error' => 'No tiene permisos para modificar pedidos']);
             return;
         }
@@ -156,8 +156,8 @@ class Admin extends CI_Controller {
     }
 
     public function categoria_crear() {
-        // Validar permisos de escritura (solo admin y admin_sucursal)
-        if($this->rol == 'usuario') {
+        // Validar permisos de escritura
+        if(!$this->tiene_permiso('categorias')) {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'No tiene permisos para crear categorías']);
             return;
@@ -200,7 +200,7 @@ class Admin extends CI_Controller {
 
     public function categoria_editar() {
         // Validar permisos de escritura
-        if($this->rol == 'usuario') {
+        if(!$this->tiene_permiso('categorias')) {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'No tiene permisos para editar categorías']);
             return;
@@ -235,7 +235,7 @@ class Admin extends CI_Controller {
 
     public function categoria_eliminar() {
         // Validar permisos de escritura
-        if($this->rol == 'usuario') {
+        if(!$this->tiene_permiso('categorias')) {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'No tiene permisos para eliminar categorías']);
             return;
@@ -273,7 +273,7 @@ class Admin extends CI_Controller {
 
     public function categoria_toggle_estado() {
         // Validar permisos de escritura
-        if($this->rol == 'usuario') {
+        if(!$this->tiene_permiso('categorias')) {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'No tiene permisos para modificar categorías']);
             return;
@@ -333,8 +333,8 @@ class Admin extends CI_Controller {
     }
 
     public function producto_crear() {
-        // Validar permisos de escritura (solo admin y admin_sucursal)
-        if($this->rol == 'usuario') {
+        // Validar permisos de escritura
+        if(!$this->tiene_permiso('productos')) {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'No tiene permisos para crear productos']);
             return;
@@ -395,7 +395,7 @@ class Admin extends CI_Controller {
 
     public function producto_editar() {
         // Validar permisos de escritura
-        if($this->rol == 'usuario') {
+        if(!$this->tiene_permiso('productos')) {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'No tiene permisos para editar productos']);
             return;
@@ -450,7 +450,7 @@ class Admin extends CI_Controller {
 
     public function producto_eliminar() {
         // Validar permisos de escritura
-        if($this->rol == 'usuario') {
+        if(!$this->tiene_permiso('productos')) {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'No tiene permisos para eliminar productos']);
             return;
@@ -482,7 +482,7 @@ class Admin extends CI_Controller {
 
     public function producto_toggle_disponibilidad() {
         // Validar permisos de escritura
-        if($this->rol == 'usuario') {
+        if(!$this->tiene_permiso('productos')) {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'No tiene permisos para modificar productos']);
             return;

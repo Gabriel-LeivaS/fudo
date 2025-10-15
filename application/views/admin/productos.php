@@ -379,7 +379,7 @@
         <div class="card">
             <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
                 <h5>📋 Listado de Productos</h5>
-                <?php if($this->session->userdata('rol') != 'usuario'): ?>
+                <?php if($tiene_permiso('productos')): ?>
                 <button class="btn btn-primary" onclick="abrirModalCrear()" id="btnNuevoProducto">
                     ➕ Nuevo Producto
                 </button>
@@ -489,7 +489,7 @@
                                         </td>
                                         <td class="text-center">
                                             <div class="action-buttons">
-                                                <?php if($this->session->userdata('rol') != 'usuario'): ?>
+                                                <?php if($tiene_permiso('productos')): ?>
                                                 <button class="btn btn-warning btn-action" 
                                                         onclick='abrirModalEditar(<?= json_encode([
                                                             'id_producto' => $prod->id_producto,
@@ -510,8 +510,6 @@
                                                         onclick="eliminarProducto(<?= $prod->id_producto ?>, '<?= htmlspecialchars($prod->nombre, ENT_QUOTES) ?>')">
                                                     🗑️
                                                 </button>
-                                                <?php else: ?>
-                                                <span class="badge bg-secondary">Solo lectura</span>
                                                 <?php endif; ?>
                                             </div>
                                         </td>

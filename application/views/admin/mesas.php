@@ -406,14 +406,31 @@
                     <h1>🪑 Gestión de Mesas</h1>
                     <p>Administra las mesas de tu sucursal</p>
                 </div>
-                <?php if($rol != 'usuario'): ?>
+                <?php 
+                // Función helper para verificar permisos
+                $rol = $this->session->userdata('rol');
+                $permisos = $this->session->userdata('permisos');
+                
+                $tiene_permiso_mesas = function() use ($rol, $permisos) {
+                    // Super admin: Solo acceso a secciones administrativas
+                    if($rol == 'admin') {
+                        return in_array('mesas', ['categorias', 'productos', 'usuarios', 'sucursales']);
+                    }
+                    // Admin sucursal: acceso completo
+                    if($rol == 'admin_sucursal') {
+                        return true;
+                    }
+                    // Usuario: verificar permisos específicos
+                    if($rol == 'usuario' && is_array($permisos)) {
+                        return isset($permisos['mesas']) && $permisos['mesas'] === true;
+                    }
+                    return false;
+                };
+                ?>
+                <?php if($tiene_permiso_mesas()): ?>
                     <button class="btn btn-add-mesa" data-bs-toggle="modal" data-bs-target="#modalCrearMesa">
                         ➕ Nueva Mesa
                     </button>
-                <?php else: ?>
-                    <span class="badge bg-info" style="font-size: 16px; padding: 10px 20px;">
-                        👁️ Modo Solo Lectura
-                    </span>
                 <?php endif; ?>
             </div>
         </div>
@@ -466,14 +483,16 @@
                                         📱 Generar QR
                                     </button>
                                     
-                                    <?php if($mesa->ocupada): ?>
-                                        <button class="btn btn-liberar btn-action" onclick="liberarMesa(<?= $mesa->id_mesa ?>, '<?= $mesa->nombre ?>')">
-                                            � Liberar Mesa
-                                        </button>
-                                    <?php else: ?>
-                                        <button class="btn btn-delete btn-action" onclick="eliminarMesa(<?= $mesa->id_mesa ?>, '<?= $mesa->nombre ?>')">
-                                            �️ Eliminar
-                                        </button>
+                                    <?php if($tiene_permiso_mesas()): ?>
+                                        <?php if($mesa->ocupada): ?>
+                                            <button class="btn btn-liberar btn-action" onclick="liberarMesa(<?= $mesa->id_mesa ?>, '<?= $mesa->nombre ?>')">
+                                                🔓 Liberar Mesa
+                                            </button>
+                                        <?php else: ?>
+                                            <button class="btn btn-delete btn-action" onclick="eliminarMesa(<?= $mesa->id_mesa ?>, '<?= $mesa->nombre ?>')">
+                                                🗑️ Eliminar
+                                            </button>
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                 </div>
                             </div>

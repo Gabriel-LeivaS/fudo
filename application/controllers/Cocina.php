@@ -25,9 +25,15 @@ class Cocina extends CI_Controller {
      * Verificar si el usuario tiene permiso para cocina
      */
     private function tiene_permiso_cocina() {
-        if($this->rol == 'admin' || $this->rol == 'admin_sucursal') {
+        // Super admin: Solo acceso a secciones administrativas
+        if($this->rol == 'admin') {
+            return in_array('cocina', ['categorias', 'productos', 'usuarios', 'sucursales']);
+        }
+        // Admin sucursal: acceso completo
+        if($this->rol == 'admin_sucursal') {
             return true;
         }
+        // Usuario: verificar permisos específicos
         if($this->rol == 'usuario' && is_array($this->permisos)) {
             return isset($this->permisos['cocina']) && $this->permisos['cocina'] === true;
         }

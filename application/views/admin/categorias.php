@@ -378,7 +378,7 @@
         <div class="card">
             <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
                 <h5>📋 Listado de Categorías</h5>
-                <?php if($this->session->userdata('rol') != 'usuario'): ?>
+                <?php if($tiene_permiso('categorias')): ?>
                 <button class="btn btn-primary" onclick="abrirModalCrear()" id="btnNuevaCategoria">
                     ➕ Nueva Categoría
                 </button>
@@ -437,7 +437,7 @@
                                         </td>
                                         <td class="text-center">
                                             <div class="action-buttons">
-                                                <?php if($this->session->userdata('rol') != 'usuario'): ?>
+                                                <?php if($tiene_permiso('categorias')): ?>
                                                 <button class="btn btn-warning btn-action" 
                                                         onclick="abrirModalEditar(<?= $cat->id_categoria ?>, '<?= htmlspecialchars($cat->nombre, ENT_QUOTES) ?>')">
                                                     ✏️
@@ -451,8 +451,6 @@
                                                         onclick="eliminarCategoria(<?= $cat->id_categoria ?>, '<?= htmlspecialchars($cat->nombre, ENT_QUOTES) ?>')">
                                                     🗑️
                                                 </button>
-                                                <?php else: ?>
-                                                <span class="badge bg-secondary">Solo lectura</span>
                                                 <?php endif; ?>
                                             </div>
                                         </td>

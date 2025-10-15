@@ -25,9 +25,15 @@ class Mesas extends CI_Controller {
      * Verificar si el usuario tiene permiso para mesas
      */
     private function tiene_permiso_mesas() {
-        if($this->rol == 'admin' || $this->rol == 'admin_sucursal') {
+        // Super admin: Solo acceso a secciones administrativas
+        if($this->rol == 'admin') {
+            return in_array('mesas', ['categorias', 'productos', 'usuarios', 'sucursales']);
+        }
+        // Admin sucursal: acceso completo
+        if($this->rol == 'admin_sucursal') {
             return true;
         }
+        // Usuario: verificar permisos específicos
         if($this->rol == 'usuario' && is_array($this->permisos)) {
             return isset($this->permisos['mesas']) && $this->permisos['mesas'] === true;
         }
@@ -76,9 +82,9 @@ class Mesas extends CI_Controller {
     public function crear() {
         header('Content-Type: application/json');
         
-        // Validar que no sea rol usuario (solo lectura)
-        if($this->rol == 'usuario') {
-            echo json_encode(['success' => false, 'message' => 'No tienes permisos para crear mesas (solo lectura)']);
+        // Validar permisos de escritura
+        if(!$this->tiene_permiso_mesas()) {
+            echo json_encode(['success' => false, 'message' => 'No tienes permisos para crear mesas']);
             exit;
         }
         
@@ -147,9 +153,9 @@ class Mesas extends CI_Controller {
     public function eliminar($id_mesa) {
         header('Content-Type: application/json');
         
-        // Validar que no sea rol usuario (solo lectura)
-        if($this->rol == 'usuario') {
-            echo json_encode(['success' => false, 'message' => 'No tienes permisos para eliminar mesas (solo lectura)']);
+        // Validar permisos de escritura
+        if(!$this->tiene_permiso_mesas()) {
+            echo json_encode(['success' => false, 'message' => 'No tienes permisos para eliminar mesas']);
             exit;
         }
         
@@ -182,9 +188,9 @@ class Mesas extends CI_Controller {
     public function liberar($id_mesa) {
         header('Content-Type: application/json');
         
-        // Validar que no sea rol usuario (solo lectura)
-        if($this->rol == 'usuario') {
-            echo json_encode(['success' => false, 'message' => 'No tienes permisos para liberar mesas (solo lectura)']);
+        // Validar permisos de escritura
+        if(!$this->tiene_permiso_mesas()) {
+            echo json_encode(['success' => false, 'message' => 'No tienes permisos para liberar mesas']);
             exit;
         }
         

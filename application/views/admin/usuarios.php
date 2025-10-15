@@ -648,9 +648,9 @@
                                 <option value="usuario">👁️ Usuario</option>
                             </select>
                             <small class="form-text text-muted">
-                                <strong>Super Admin:</strong> Control total · 
-                                <strong>Admin Sucursal:</strong> Gestión operativa · 
-                                <strong>Usuario:</strong> Solo lectura
+                                <strong>Super Admin:</strong> Gestión administrativa · 
+                                <strong>Admin Sucursal:</strong> Gestión operativa completa · 
+                                <strong>Usuario:</strong> Permisos granulares configurables
                             </small>
                         </div>
                         <div class="mb-3 sucursal-field" id="sucursalFieldEditar">
