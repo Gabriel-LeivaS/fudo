@@ -275,12 +275,17 @@
                 
                 // Función helper para verificar permisos
                 $tiene_permiso = function($seccion) use ($rol, $permisos) {
-                    // Pedidos: Solo admin_sucursal y usuarios con permiso (NO super admin)
+                    // Super admin: Solo acceso a secciones administrativas
+                    if($rol == 'admin') {
+                        return in_array($seccion, ['categorias', 'productos', 'usuarios', 'sucursales']);
+                    }
+                    // Pedidos: Solo admin_sucursal y usuarios con permiso
                     if($seccion == 'pedidos') {
                         return $rol == 'admin_sucursal' || ($rol == 'usuario' && is_array($permisos) && isset($permisos['pedidos']) && $permisos['pedidos'] === true);
                     }
-                    // Resto de secciones: admin y admin_sucursal tienen acceso
-                    if($rol == 'admin' || $rol == 'admin_sucursal') return true;
+                    // Admin sucursal: acceso completo
+                    if($rol == 'admin_sucursal') return true;
+                    // Usuarios: permisos granulares
                     if($rol == 'usuario' && is_array($permisos)) {
                         return isset($permisos[$seccion]) && $permisos[$seccion] === true;
                     }
@@ -300,7 +305,7 @@
                     <a href="<?= site_url('admin/productos') ?>" class="nav-link">🛍️ Productos</a>
                 <?php endif; ?>
                 
-                <?php if($tiene_permiso('micarta')): ?>
+                <?php if($tiene_permiso('mi_carta')): ?>
                     <a href="<?= site_url('admin/mi_carta') ?>" class="nav-link">📋 Mi Carta</a>
                 <?php endif; ?>
                 
@@ -427,11 +432,11 @@
                                         <td><?= htmlspecialchars($usuario->email) ?></td>
                                         <td>
                                             <?php if ($usuario->rol == 'admin'): ?>
-                                                <span class="badge bg-primary">⭐ Super Admin</span>
+                                                <span class="badge bg-primary">Admin</span>
                                             <?php elseif ($usuario->rol == 'admin_sucursal'): ?>
-                                                <span class="badge bg-warning">👤 Admin Sucursal</span>
+                                                <span class="badge bg-warning">Admin Sucursal</span>
                                             <?php elseif ($usuario->rol == 'usuario'): ?>
-                                                <span class="badge bg-info">👁️ Usuario</span>
+                                                <span class="badge bg-info">Usuario</span>
                                             <?php else: ?>
                                                 <span class="badge bg-secondary">❓ <?= htmlspecialchars($usuario->rol) ?></span>
                                             <?php endif; ?>
@@ -520,9 +525,9 @@
                             <select name="rol" class="form-select" id="rolCrear" required 
                                     onchange="toggleSucursalField('crear')">
                                 <option value="">Selecciona un rol</option>
-                                <option value="admin">⭐ Super Admin</option>
+                                <option value="admin">⭐ Admin</option>
                                 <option value="admin_sucursal">👤 Admin Sucursal</option>
-                                <option value="usuario">👁️ Usuario (Solo Lectura)</option>
+                                <option value="usuario">👁️ Usuario</option>
                             </select>
                             <small class="form-text text-muted">
                                 <strong>Super Admin:</strong> Control total del sistema · 
@@ -638,9 +643,9 @@
                             <label class="form-label">🎭 Rol *</label>
                             <select name="rol" id="editarRol" class="form-select" required 
                                     onchange="toggleSucursalField('editar')">
-                                <option value="admin">⭐ Super Admin</option>
+                                <option value="admin">⭐ Admin</option>
                                 <option value="admin_sucursal">👤 Admin Sucursal</option>
-                                <option value="usuario">👁️ Usuario (Solo Lectura)</option>
+                                <option value="usuario">👁️ Usuario</option>
                             </select>
                             <small class="form-text text-muted">
                                 <strong>Super Admin:</strong> Control total · 

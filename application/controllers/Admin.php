@@ -28,8 +28,18 @@ class Admin extends CI_Controller {
      * Verificar si el usuario tiene permiso para acceder a una sección
      */
     private function tiene_permiso($seccion) {
-        // Admin y admin_sucursal tienen acceso completo
-        if($this->rol == 'admin' || $this->rol == 'admin_sucursal') {
+        // Super admin: Solo acceso a secciones administrativas
+        if($this->rol == 'admin') {
+            return in_array($seccion, ['categorias', 'productos', 'usuarios', 'sucursales']);
+        }
+        
+        // Pedidos: Solo admin_sucursal y usuarios con permiso
+        if($seccion == 'pedidos') {
+            return $this->rol == 'admin_sucursal' || ($this->rol == 'usuario' && is_array($this->permisos) && isset($this->permisos['pedidos']) && $this->permisos['pedidos'] === true);
+        }
+        
+        // Admin sucursal: acceso completo
+        if($this->rol == 'admin_sucursal') {
             return true;
         }
         
@@ -649,12 +659,85 @@ class Admin extends CI_Controller {
     }
 
     // ============================================
+    // DIAGNÓSTICO DE PERMISOS
+    // ============================================
+    
+    public function debug_permisos() {
+        echo "<!DOCTYPE html>";
+        echo "<html><head><meta charset='utf-8'><title>🔍 Debug Permisos</title>";
+        echo "<style>body{font-family:Arial,sans-serif;padding:20px;} table{border-collapse:collapse;width:100%;} th,td{border:1px solid #ddd;padding:8px;} th{background:#f2f2f2;} .success{color:green;} .error{color:red;}</style>";
+        echo "</head><body>";
+        
+        echo "<h1>🔍 Diagnóstico de Permisos - Mi Carta</h1>";
+        
+        // Datos de sesión
+        echo "<h2>📋 Datos de Sesión</h2>";
+        echo "<table>";
+        echo "<tr><th>Campo</th><th>Valor</th></tr>";
+        echo "<tr><td>rol</td><td>" . ($this->rol ?? 'NULL') . "</td></tr>";
+        echo "<tr><td>id_sucursal</td><td>" . ($this->id_sucursal ?? 'NULL') . "</td></tr>";
+        echo "<tr><td>permisos (raw)</td><td><pre>" . print_r($this->permisos, true) . "</pre></td></tr>";
+        echo "<tr><td>permisos es array?</td><td>" . (is_array($this->permisos) ? 'SÍ' : 'NO') . "</td></tr>";
+        if(is_array($this->permisos)) {
+            echo "<tr><td>mi_carta existe?</td><td>" . (isset($this->permisos['mi_carta']) ? 'SÍ' : 'NO') . "</td></tr>";
+            if(isset($this->permisos['mi_carta'])) {
+                echo "<tr><td>mi_carta valor</td><td>" . ($this->permisos['mi_carta'] === true ? 'TRUE' : ($this->permisos['mi_carta'] === false ? 'FALSE' : $this->permisos['mi_carta'])) . "</td></tr>";
+            }
+        }
+        echo "</table>";
+        
+        // Test de función tiene_permiso
+        echo "<h2>🧪 Test de Función tiene_permiso</h2>";
+        echo "<table>";
+        echo "<tr><th>Sección</th><th>Resultado</th></tr>";
+        $secciones = ['mi_carta', 'categorias', 'productos', 'usuarios', 'pedidos', 'cocina', 'mesas'];
+        foreach($secciones as $seccion) {
+            $resultado = $this->tiene_permiso($seccion);
+            $clase = $resultado ? 'success' : 'error';
+            echo "<tr><td>$seccion</td><td class='$clase'>" . ($resultado ? 'PERMITIDO' : 'DENEGADO') . "</td></tr>";
+        }
+        echo "</table>";
+        
+        // Datos de BD
+        echo "<h2>💾 Datos de Base de Datos</h2>";
+        $usuario_actual = $this->session->userdata('usuario');
+        if($usuario_actual) {
+            $query = $this->db->get_where('usuarios_admin', ['usuario' => $usuario_actual]);
+            $user_data = $query->row();
+            if($user_data) {
+                echo "<table>";
+                echo "<tr><th>Campo BD</th><th>Valor</th></tr>";
+                echo "<tr><td>ID</td><td>$user_data->id</td></tr>";
+                echo "<tr><td>Usuario</td><td>$user_data->usuario</td></tr>";
+                echo "<tr><td>Rol</td><td>$user_data->rol</td></tr>";
+                echo "<tr><td>ID Sucursal</td><td>" . ($user_data->id_sucursal ?? 'NULL') . "</td></tr>";
+                echo "<tr><td>Permisos (raw)</td><td><pre>" . ($user_data->permisos ?? 'NULL') . "</pre></td></tr>";
+                
+                if($user_data->permisos) {
+                    $permisos_bd = json_decode($user_data->permisos, true);
+                    echo "<tr><td>Permisos (parsed)</td><td><pre>" . print_r($permisos_bd, true) . "</pre></td></tr>";
+                    if(is_array($permisos_bd)) {
+                        echo "<tr><td>mi_carta en BD?</td><td>" . (isset($permisos_bd['mi_carta']) ? 'SÍ' : 'NO') . "</td></tr>";
+                        if(isset($permisos_bd['mi_carta'])) {
+                            echo "<tr><td>mi_carta valor BD</td><td>" . ($permisos_bd['mi_carta'] === true ? 'TRUE' : ($permisos_bd['mi_carta'] === false ? 'FALSE' : $permisos_bd['mi_carta'])) . "</td></tr>";
+                        }
+                    }
+                }
+                echo "</table>";
+            }
+        }
+        
+        echo "<br><a href='" . site_url('admin/usuarios') . "'>⬅️ Volver a Usuarios</a>";
+        echo "</body></html>";
+    }
+    
+    // ============================================
     // MI CARTA - Vista previa para admin sucursal
     // ============================================
     
     public function mi_carta() {
         // Verificar permisos
-        if(!$this->tiene_permiso('micarta')) {
+        if(!$this->tiene_permiso('mi_carta')) {
             show_error('No tienes permisos para acceder a esta sección', 403);
             return;
         }

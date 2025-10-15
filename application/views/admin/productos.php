@@ -285,12 +285,17 @@
                 
                 // Función helper para verificar permisos
                 $tiene_permiso = function($seccion) use ($rol, $permisos) {
-                    // Pedidos: Solo admin_sucursal y usuarios con permiso (NO super admin)
+                    // Super admin: Solo acceso a secciones administrativas
+                    if($rol == 'admin') {
+                        return in_array($seccion, ['categorias', 'productos', 'usuarios', 'sucursales']);
+                    }
+                    // Pedidos: Solo admin_sucursal y usuarios con permiso
                     if($seccion == 'pedidos') {
                         return $rol == 'admin_sucursal' || ($rol == 'usuario' && is_array($permisos) && isset($permisos['pedidos']) && $permisos['pedidos'] === true);
                     }
-                    // Resto de secciones: admin y admin_sucursal tienen acceso
-                    if($rol == 'admin' || $rol == 'admin_sucursal') return true;
+                    // Admin sucursal: acceso completo
+                    if($rol == 'admin_sucursal') return true;
+                    // Usuarios: permisos granulares
                     if($rol == 'usuario' && is_array($permisos)) {
                         return isset($permisos[$seccion]) && $permisos[$seccion] === true;
                     }
