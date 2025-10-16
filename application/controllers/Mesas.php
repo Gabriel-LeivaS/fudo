@@ -10,6 +10,7 @@ class Mesas extends CI_Controller {
         $this->load->library('session');
         $this->load->library('ciqrcode');
         $this->load->model('Mesa_model');
+        $this->load->model('Pedido_model');
         
         // Verificar que esté logueado
         if(!$this->session->userdata('logueado')) {
@@ -220,9 +221,9 @@ class Mesas extends CI_Controller {
     }
 
     private function verificar_mesa_ocupada($id_mesa) {
-        // Una mesa está ocupada si tiene pedidos en estado Pendiente o En preparación
+        // Una mesa está ocupada si tiene pedidos activos (no completados)
         $this->db->where('id_mesa', $id_mesa);
-        $this->db->where_in('estado', ['Pendiente', 'En preparación']);
+        $this->db->where_in('estado', ['Pendiente', 'En preparación', 'Lista']);
         $pedidos = $this->db->get('pedidos')->num_rows();
         return $pedidos > 0;
     }
@@ -269,5 +270,136 @@ class Mesas extends CI_Controller {
     public function listar(){
         $mesas = $this->db->get('mesas')->result();
         $this->load->view('admin/mesas', ['mesas'=>$mesas]);
+    }
+
+    /**
+     * Ver historial de pedidos de una mesa
+     */
+    public function historial($id_mesa) {
+        header('Content-Type: application/json');
+        
+        // Verificar permisos
+        if(!$this->tiene_permiso_mesas()) {
+            echo json_encode(['success' => false, 'message' => 'No tienes permisos para ver el historial']);
+            return;
+        }
+        
+        // Verificar que la mesa existe
+        $mesa = $this->Mesa_model->obtener_por_id($id_mesa);
+        if(!$mesa) {
+            echo json_encode(['success' => false, 'message' => 'Mesa no encontrada']);
+            return;
+        }
+        
+        // Verificar permisos de sucursal
+        if($this->rol == 'admin_sucursal' && $mesa->id_sucursal != $this->id_sucursal) {
+            echo json_encode(['success' => false, 'message' => 'No tienes permisos para ver esta mesa']);
+            return;
+        }
+        
+        // Obtener historial y totales
+        $pedidos_activos = $this->Pedido_model->obtener_pedidos_activos_mesa($id_mesa);
+        $total_mesa = $this->Pedido_model->obtener_total_mesa($id_mesa);
+        
+        // Obtener detalles de cada pedido
+        foreach($pedidos_activos as $pedido) {
+            $pedido->detalle = $this->Pedido_model->obtener_detalle_pedido($pedido->id_pedido);
+        }
+        
+        echo json_encode([
+            'success' => true,
+            'mesa' => $mesa,
+            'pedidos' => $pedidos_activos,
+            'total_mesa' => $total_mesa
+        ]);
+    }
+
+    /**
+     * Cobrar y liberar mesa (marcar todos los pedidos como completados)
+     */
+    public function cobrar($id_mesa) {
+        header('Content-Type: application/json');
+        
+        // Verificar permisos
+        if(!$this->tiene_permiso_mesas()) {
+            echo json_encode(['success' => false, 'message' => 'No tienes permisos para cobrar mesas']);
+            return;
+        }
+        
+        // Verificar que la mesa existe
+        $mesa = $this->Mesa_model->obtener_por_id($id_mesa);
+        if(!$mesa) {
+            echo json_encode(['success' => false, 'message' => 'Mesa no encontrada']);
+            return;
+        }
+        
+        // Verificar permisos de sucursal
+        if($this->rol == 'admin_sucursal' && $mesa->id_sucursal != $this->id_sucursal) {
+            echo json_encode(['success' => false, 'message' => 'No tienes permisos para cobrar esta mesa']);
+            return;
+        }
+        
+        // Obtener total antes de completar
+        $total_cobrado = $this->Pedido_model->obtener_total_mesa($id_mesa);
+        
+        if($total_cobrado <= 0) {
+            echo json_encode(['success' => false, 'message' => 'No hay pedidos activos para cobrar']);
+            return;
+        }
+        
+        // Completar todos los pedidos de la mesa
+        if($this->Pedido_model->completar_pedidos_mesa($id_mesa)) {
+            echo json_encode([
+                'success' => true, 
+                'message' => 'Mesa cobrada y liberada exitosamente',
+                'total_cobrado' => $total_cobrado
+            ]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Error al procesar el cobro']);
+        }
+    }
+
+    /**
+     * Endpoint AJAX para actualización automática de estado de mesas
+     */
+    public function obtener_mesas_ajax() {
+        header('Content-Type: application/json');
+        
+        // Verificar permisos
+        if(!$this->tiene_permiso_mesas()) {
+            echo json_encode(['error' => 'No autorizado']);
+            return;
+        }
+        
+        // Obtener mesas según permisos
+        if($this->rol == 'admin_sucursal') {
+            $mesas = $this->Mesa_model->obtener_por_sucursal($this->id_sucursal);
+        } else {
+            $mesas = $this->Mesa_model->obtener_todas();
+        }
+        
+        // Para cada mesa, verificar si tiene pedidos activos
+        foreach($mesas as $mesa) {
+            $pedidos_activos = $this->db->where('id_mesa', $mesa->id_mesa)
+                                       ->where_in('estado', ['Pendiente', 'En preparación', 'Lista'])
+                                       ->count_all_results('pedidos');
+            $mesa->ocupada = $pedidos_activos > 0;
+        }
+        
+        // Ordenar las mesas por número (igual que en el controlador principal)
+        usort($mesas, function($a, $b) {
+            // Extraer el número del nombre de la mesa (ej: "Mesa 5" -> 5)
+            preg_match('/\d+/', $a->nombre, $numA);
+            preg_match('/\d+/', $b->nombre, $numB);
+            
+            if(!empty($numA) && !empty($numB)) {
+                return (int)$numA[0] - (int)$numB[0];
+            }
+            
+            // Si no tienen números, ordenar alfabéticamente
+            return strcmp($a->nombre, $b->nombre);
+        });
+        
+        echo json_encode(['mesas' => $mesas]);
     }
 }

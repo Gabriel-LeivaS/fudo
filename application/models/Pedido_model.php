@@ -85,4 +85,43 @@ class Pedido_model extends CI_Model {
         $this->db->where('id_pedido', $id_pedido);
         return $this->db->update('pedidos', ['estado' => $nuevo_estado]);
     }
+
+    /**
+     * Obtener pedidos activos de una mesa (no completados)
+     * @param int $id_mesa
+     * @return array
+     */
+    public function obtener_pedidos_activos_mesa($id_mesa) {
+        $this->db->select('p.*, c.nombre as cliente_nombre');
+        $this->db->from('pedidos p');
+        $this->db->join('clientes c', 'c.id_cliente = p.id_cliente', 'left');
+        $this->db->where('p.id_mesa', $id_mesa);
+        $this->db->where_in('p.estado', ['Pendiente', 'En preparación', 'Lista']);
+        $this->db->order_by('p.fecha', 'DESC');
+        return $this->db->get()->result();
+    }
+
+    /**
+     * Obtener total acumulado de pedidos activos de una mesa
+     * @param int $id_mesa
+     * @return float
+     */
+    public function obtener_total_mesa($id_mesa) {
+        $this->db->select_sum('total');
+        $this->db->where('id_mesa', $id_mesa);
+        $this->db->where_in('estado', ['Pendiente', 'En preparación', 'Lista']);
+        $result = $this->db->get('pedidos')->row();
+        return $result->total ?? 0;
+    }
+
+    /**
+     * Marcar todos los pedidos de una mesa como completados (para cobro)
+     * @param int $id_mesa
+     * @return bool
+     */
+    public function completar_pedidos_mesa($id_mesa) {
+        $this->db->where('id_mesa', $id_mesa);
+        $this->db->where_in('estado', ['Pendiente', 'En preparación', 'Lista']);
+        return $this->db->update('pedidos', ['estado' => 'Completado']);
+    }
 }

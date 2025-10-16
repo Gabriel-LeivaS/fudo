@@ -266,17 +266,6 @@
                         <span class="btn-text">Iniciar Sesión</span>
                     </button>
                 </form>
-
-                <div class="demo-credentials">
-                    <h6>🔑 Credenciales de Prueba:</h6>
-                    <div class="mb-2">
-                        <strong>Super Admin:</strong> <code>admin</code> / <code>admin123</code>
-                    </div>
-                    <div>
-                        <strong>Admin Sucursal:</strong> <code>admin_centro</code> / <code>centro123</code>
-                    </div>
-                </div>
-
                 <p class="footer-text">
                     FUDO © <?= date('Y') ?> | Sistema Multi-Sucursal
                 </p>

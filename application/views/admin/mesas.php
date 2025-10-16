@@ -194,6 +194,17 @@
             color: white;
         }
         
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40,167,69,0.4);
+            color: white;
+        }
+        
         .btn-add-mesa {
             background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
             color: white;
@@ -452,7 +463,7 @@
         </div>
 
         <!-- Grid de Mesas -->
-        <div class="row">
+        <div class="row" id="mesasContainer">
             <?php if(empty($mesas)): ?>
                 <div class="col-12">
                     <div class="card">
@@ -465,7 +476,7 @@
             <?php else: ?>
                 <?php foreach($mesas as $mesa): ?>
                     <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
-                        <div class="mesa-card <?= $mesa->ocupada ? 'ocupada' : 'libre' ?>">
+                        <div class="mesa-card <?= $mesa->ocupada ? 'ocupada' : 'libre' ?>" data-mesa-id="<?= $mesa->id_mesa ?>">
                             <div class="text-center">
                                 <div class="mesa-nombre"><?= $mesa->nombre ?></div>
                                 <span class="mesa-badge <?= $mesa->ocupada ? 'badge-ocupada' : 'badge-libre' ?>">
@@ -483,8 +494,17 @@
                                         📱 Generar QR
                                     </button>
                                     
+                                    <?php if($mesa->ocupada): ?>
+                                        <button class="btn btn-info btn-action" onclick="verHistorial(<?= $mesa->id_mesa ?>, '<?= $mesa->nombre ?>')">
+                                            📋 Ver Historial
+                                        </button>
+                                    <?php endif; ?>
+                                    
                                     <?php if($tiene_permiso_mesas()): ?>
                                         <?php if($mesa->ocupada): ?>
+                                            <button class="btn btn-success btn-action" onclick="cobrarMesa(<?= $mesa->id_mesa ?>, '<?= $mesa->nombre ?>')">
+                                                💰 Cobrar Mesa
+                                            </button>
                                             <button class="btn btn-liberar btn-action" onclick="liberarMesa(<?= $mesa->id_mesa ?>, '<?= $mesa->nombre ?>')">
                                                 🔓 Liberar Mesa
                                             </button>
@@ -587,6 +607,51 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                     <button type="button" class="btn btn-qr" id="btnDescargarQR" style="display: none;" onclick="descargarQR()">
                         💾 Descargar QR
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Historial Mesa -->
+    <div class="modal fade" id="modalHistorial" tabindex="-1" aria-labelledby="modalHistorialLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%); color: white;">
+                    <h5 class="modal-title" id="modalHistorialLabel">
+                        📋 Historial de Pedidos - <span id="historialMesaNombre"></span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" style="padding: 2rem;">
+                    <div id="historialContainer">
+                        <div id="historialLoading" class="d-flex flex-column align-items-center">
+                            <div class="spinner-border text-primary mb-3" role="status">
+                                <span class="visually-hidden">Cargando historial...</span>
+                            </div>
+                            <p class="text-muted">Cargando historial de pedidos...</p>
+                        </div>
+                        <div id="historialContent" style="display: none;">
+                            <div class="alert alert-info mb-4" style="background: linear-gradient(135deg, rgba(176,140,106,0.1) 0%, rgba(163,192,107,0.1) 100%); border: 1px solid var(--accent); border-radius: 10px;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span><strong>💰 Total a Cobrar:</strong></span>
+                                    <span class="h4 mb-0" id="totalMesa" style="color: var(--accent); font-weight: 800;">$0</span>
+                                </div>
+                            </div>
+                            <div id="listaPedidos"></div>
+                        </div>
+                        <div id="historialError" style="display: none;">
+                            <div class="alert alert-danger" style="border-radius: 10px;">
+                                <strong>❌ Error:</strong><br>
+                                <span id="historialErrorMessage"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-success" id="btnCobrarDesdeHistorial" style="display: none;" onclick="cobrarDesdeHistorial()">
+                        💰 Cobrar Mesa
                     </button>
                 </div>
             </div>
@@ -844,6 +909,264 @@
                 mostrarToast('QR descargado exitosamente', 'success');
             }
         }
+
+        let currentMesaId = null;
+
+        async function verHistorial(id, nombre) {
+            currentMesaId = id;
+            
+            // Configurar modal
+            document.getElementById('historialMesaNombre').textContent = nombre;
+            document.getElementById('historialLoading').style.display = 'block';
+            document.getElementById('historialContent').style.display = 'none';
+            document.getElementById('historialError').style.display = 'none';
+            document.getElementById('btnCobrarDesdeHistorial').style.display = 'none';
+            
+            // Mostrar modal
+            const modal = new bootstrap.Modal(document.getElementById('modalHistorial'));
+            modal.show();
+            
+            try {
+                const response = await fetch('<?= site_url('mesas/historial/') ?>' + id);
+                const result = await response.json();
+                
+                // Ocultar loading
+                document.getElementById('historialLoading').style.display = 'none';
+                
+                if(result.success) {
+                    // Mostrar total
+                    document.getElementById('totalMesa').textContent = '$' + parseFloat(result.total_mesa).toLocaleString();
+                    
+                    // Generar lista de pedidos
+                    const listaPedidos = document.getElementById('listaPedidos');
+                    listaPedidos.innerHTML = '';
+                    
+                    if(result.pedidos.length === 0) {
+                        listaPedidos.innerHTML = '<div class="alert alert-warning">No hay pedidos activos para esta mesa.</div>';
+                    } else {
+                        result.pedidos.forEach(pedido => {
+                            const pedidoHtml = `
+                                <div class="card mb-3" style="border-radius: 10px;">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>Pedido #${pedido.id_pedido}</strong>
+                                            <small class="text-muted ms-2">${new Date(pedido.fecha).toLocaleString()}</small>
+                                        </div>
+                                        <div>
+                                            <span class="badge ${getEstadoBadgeClass(pedido.estado)}">${pedido.estado}</span>
+                                            <span class="badge bg-success ms-1">$${parseFloat(pedido.total).toLocaleString()}</span>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        ${pedido.cliente_nombre ? `<p><strong>Cliente:</strong> ${pedido.cliente_nombre}</p>` : ''}
+                                        ${pedido.notas ? `<p><strong>Notas:</strong> ${pedido.notas}</p>` : ''}
+                                        <div class="table-responsive">
+                                            <table class="table table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Producto</th>
+                                                        <th>Cantidad</th>
+                                                        <th>Precio Unit.</th>
+                                                        <th>Subtotal</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    ${pedido.detalle.map(item => `
+                                                        <tr>
+                                                            <td>${item.nombre}</td>
+                                                            <td>${item.cantidad}</td>
+                                                            <td>$${parseFloat(item.precio).toLocaleString()}</td>
+                                                            <td>$${parseFloat(item.subtotal).toLocaleString()}</td>
+                                                        </tr>
+                                                    `).join('')}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            listaPedidos.innerHTML += pedidoHtml;
+                        });
+                        
+                        // Mostrar botón de cobrar si hay pedidos
+                        if(result.total_mesa > 0) {
+                            document.getElementById('btnCobrarDesdeHistorial').style.display = 'inline-block';
+                        }
+                    }
+                    
+                    document.getElementById('historialContent').style.display = 'block';
+                } else {
+                    // Mostrar error
+                    document.getElementById('historialErrorMessage').textContent = result.message;
+                    document.getElementById('historialError').style.display = 'block';
+                }
+            } catch(error) {
+                console.error('Error:', error);
+                document.getElementById('historialLoading').style.display = 'none';
+                document.getElementById('historialErrorMessage').textContent = 'Error de conexión al cargar el historial';
+                document.getElementById('historialError').style.display = 'block';
+            }
+        }
+
+        function getEstadoBadgeClass(estado) {
+            switch(estado) {
+                case 'Pendiente': return 'bg-warning';
+                case 'En preparación': return 'bg-info';
+                case 'Lista': return 'bg-primary';
+                case 'Completado': return 'bg-success';
+                default: return 'bg-secondary';
+            }
+        }
+
+        async function cobrarMesa(id, nombre) {
+            const confirmado = await confirmarAccion(
+                `¿Está seguro de cobrar la mesa <strong>"${nombre}"</strong>?<br><br>Esto marcará todos los pedidos activos como completados y liberará la mesa.`,
+                'warning',
+                '💰'
+            );
+            
+            if(!confirmado) {
+                return;
+            }
+            
+            await procesarCobro(id);
+        }
+
+        async function cobrarDesdeHistorial() {
+            if(!currentMesaId) return;
+            
+            const confirmado = await confirmarAccion(
+                `¿Confirma el cobro de esta mesa?<br><br>Se completarán todos los pedidos activos y se liberará la mesa.`,
+                'warning',
+                '💰'
+            );
+            
+            if(!confirmado) {
+                return;
+            }
+            
+            // Cerrar modal de historial
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalHistorial'));
+            modal.hide();
+            
+            await procesarCobro(currentMesaId);
+        }
+
+        async function procesarCobro(id) {
+            try {
+                const response = await fetch('<?= site_url('mesas/cobrar/') ?>' + id, {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if(result.success) {
+                    mostrarToast(`Mesa cobrada exitosamente. Total: $${parseFloat(result.total_cobrado).toLocaleString()}`, 'success');
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    mostrarToast('Error: ' + result.message, 'error');
+                }
+            } catch(error) {
+                console.error('Error:', error);
+                mostrarToast('Error al procesar el cobro', 'error');
+            }
+        }
+
+        // Auto-actualización de mesas cada 10 segundos (igual que pedidos)
+        async function actualizarMesas() {
+            try {
+                const response = await fetch('<?= site_url('mesas/obtener_mesas_ajax') ?>');
+                const data = await response.json();
+                
+                if(data.mesas) {
+                    actualizarEstadoMesas(data.mesas);
+                }
+            } catch(error) {
+                console.error('Error al actualizar mesas:', error);
+            }
+        }
+
+        function actualizarEstadoMesas(mesasActualizadas) {
+            // Regenerar completamente las tarjetas de mesa (igual que pedidos regenera la tabla)
+            const mesasContainer = document.getElementById('mesasContainer');
+            if(!mesasContainer) return;
+            
+            mesasContainer.innerHTML = mesasActualizadas.map(mesa => {
+                // Normalizar nombre de mesa
+                let nombreMesa = mesa.nombre.toLowerCase().includes('mesa') ? mesa.nombre : 'Mesa ' + mesa.nombre;
+                
+                // Determinar estado y clase CSS
+                let estadoClase = mesa.ocupada ? 'ocupada' : 'libre';
+                let estadoBadge = mesa.ocupada ? 
+                    '<span class="mesa-badge badge-ocupada">🔴 Ocupada</span>' : 
+                    '<span class="mesa-badge badge-libre">🟢 Libre</span>';
+                
+                let botonesOcupada = '';
+                if(mesa.ocupada) {
+                    botonesOcupada = `
+                        <button class="btn btn-info btn-action" onclick="verHistorial(${mesa.id_mesa}, '${nombreMesa}')">
+                            📋 Ver Historial
+                        </button>
+                    `;
+                    
+                    // Solo agregar botones de cobro/liberar si tiene permisos
+                    if(<?= $tiene_permiso_mesas() ? 'true' : 'false' ?>) {
+                        botonesOcupada += `
+                            <button class="btn btn-success btn-action" onclick="cobrarMesa(${mesa.id_mesa}, '${nombreMesa}')">
+                                💰 Cobrar Mesa
+                            </button>
+                            <button class="btn btn-liberar btn-action" onclick="liberarMesa(${mesa.id_mesa}, '${nombreMesa}')">
+                                🔓 Liberar Mesa
+                            </button>
+                        `;
+                    }
+                }
+                
+                let botonEliminar = '';
+                if(!mesa.ocupada && <?= $tiene_permiso_mesas() ? 'true' : 'false' ?>) {
+                    botonEliminar = `
+                        <button class="btn btn-delete btn-action" onclick="eliminarMesa(${mesa.id_mesa}, '${nombreMesa}')">
+                            🗑️ Eliminar
+                        </button>
+                    `;
+                }
+                
+                // Mostrar sucursal solo si es admin
+                let infoSucursal = '';
+                if(<?= $rol == 'admin' ? 'true' : 'false' ?>) {
+                    infoSucursal = `
+                        <div class="text-muted mb-3" style="font-size: 13px;">
+                            <strong>Sucursal:</strong> ${mesa.nombre_sucursal || 'N/A'}
+                        </div>
+                    `;
+                }
+                
+                return `
+                    <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
+                        <div class="mesa-card ${estadoClase}" data-mesa-id="${mesa.id_mesa}">
+                            <div class="text-center">
+                                <div class="mesa-nombre">${nombreMesa}</div>
+                                ${estadoBadge}
+                                
+                                ${infoSucursal}
+                                
+                                <div class="d-flex flex-column gap-2 mt-3">
+                                    <button class="btn btn-qr btn-action" onclick="generarQR(${mesa.id_mesa})">
+                                        📱 Generar QR
+                                    </button>
+                                    
+                                    ${botonesOcupada}
+                                    ${botonEliminar}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Iniciar auto-actualización cada 10 segundos (igual que pedidos pero cada 10 seg)
+        setInterval(actualizarMesas, 10000);
         
         // Función para filtrar mesas
         function filtrarMesas() {
