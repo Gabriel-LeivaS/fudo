@@ -24,96 +24,10 @@
     </style>
 </head>
 <body>
-    <!-- Navbar Superior -->
-    <nav class="navbar">
-        <div class="container-fluid">
-            <span class="navbar-brand">🍽️ FUDO</span>
-            <div class="d-flex align-items-center gap-3">
-                <?php 
-                $rol = $this->session->userdata('rol');
-                $permisos = $this->session->userdata('permisos');
-                
-                // Función helper para verificar permisos
-                $tiene_permiso = function($seccion) use ($rol, $permisos) {
-                    // Super admin: Solo acceso a secciones administrativas
-                    if($rol == 'admin') {
-                        return in_array($seccion, ['categorias', 'productos', 'usuarios', 'sucursales']);
-                    }
-                    // Pedidos: Solo admin_sucursal y usuarios con permiso
-                    if($seccion == 'pedidos') {
-                        return $rol == 'admin_sucursal' || ($rol == 'usuario' && is_array($permisos) && isset($permisos['pedidos']) && $permisos['pedidos'] === true);
-                    }
-                    // Admin sucursal: acceso completo
-                    if($rol == 'admin_sucursal') return true;
-                    // Usuarios: permisos granulares
-                    if($rol == 'usuario' && is_array($permisos)) {
-                        return isset($permisos[$seccion]) && $permisos[$seccion] === true;
-                    }
-                    return false;
-                };
-                ?>
-                
-                <?php if($tiene_permiso('pedidos')): ?>
-                    <a href="<?= site_url('admin') ?>" class="nav-link">📦 Pedidos</a>
-                <?php endif; ?>
-                
-                <?php if($tiene_permiso('categorias')): ?>
-                    <a href="<?= site_url('admin/categorias') ?>" class="nav-link">🏷️ Categorías</a>
-                <?php endif; ?>
-                
-                <?php if($tiene_permiso('productos')): ?>
-                    <a href="<?= site_url('admin/productos') ?>" class="nav-link active">🛍️ Productos</a>
-                <?php endif; ?>
-                
-                <?php if($tiene_permiso('mi_carta')): ?>
-                    <a href="<?= site_url('admin/mi_carta') ?>" class="nav-link">📋 Mi Carta</a>
-                <?php endif; ?>
-                
-                <?php if($tiene_permiso('mesas')): ?>
-                    <a href="<?= site_url('mesas') ?>" class="nav-link">🪑 Mesas</a>
-                <?php endif; ?>
-                
-                <?php if($tiene_permiso('cocina')): ?>
-                    <a href="<?= site_url('cocina') ?>" class="nav-link">🔥 Cocina</a>
-                <?php endif; ?>
-                
-                <?php if($rol == 'admin' || $rol == 'admin_sucursal'): ?>
-                    <a href="<?= site_url('admin/usuarios') ?>" class="nav-link">👥 Usuarios</a>
-                <?php endif; ?>
-                
-                <?php if($rol == 'admin'): ?>
-                    <a href="<?= site_url('admin/sucursales') ?>" class="nav-link">🏢 Sucursales</a>
-                <?php endif; ?>
-                
-                <!-- Información del Usuario -->
-                <div class="dropdown me-2">
-                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
-                        <span class="d-none d-md-inline">👤 <?= $this->session->userdata('nombre') ?></span>
-                        <span class="d-md-none">👤</span>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><h6 class="dropdown-header">👤 <?= $this->session->userdata('nombre') ?></h6></li>
-                        <li><span class="dropdown-item-text">
-                            <?php 
-                            $rol_display = [
-                                'admin' => '🔧 Super Admin',
-                                'admin_sucursal' => '🏢 Admin Sucursal',
-                                'usuario' => '👨‍💼 Usuario'
-                            ];
-                            echo $rol_display[$rol] ?? $rol;
-                            ?>
-                        </span></li>
-                        <?php if($rol == 'admin_sucursal'): ?>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><span class="dropdown-item-text text-muted">🏢 <?= $this->session->userdata('nombre_sucursal') ?></span></li>
-                        <?php endif; ?>
-                    </ul>
-                </div>
-                
-                <a href="<?= site_url('login/salir') ?>" class="btn btn-danger btn-action">🚪 Salir</a>
-            </div>
-        </div>
-    </nav>
+    <?php 
+    $active_page = 'productos';
+    include(APPPATH . 'views/admin/components/navbar.php'); 
+    ?>
 
     <div class="container-fluid">
         <!-- Admin Header -->

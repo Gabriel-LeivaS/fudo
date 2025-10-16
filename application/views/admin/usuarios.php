@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>👥 Gestión de Usuarios - Panel FUDO</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Gestión de Usuarios - Fudo</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link rel="stylesheet" href="<?= base_url('assets/css/admin-ui.css') ?>">
     <style>
         .filters {
@@ -69,96 +71,10 @@
     </style>
 </head>
 <body>
-    <!-- Navbar -->
-    <nav class="navbar">
-        <div class="container-fluid">
-            <span class="navbar-brand">🍽️ FUDO</span>
-            <div class="d-flex align-items-center gap-3">
-                <?php 
-                $rol = $this->session->userdata('rol');
-                $permisos = $this->session->userdata('permisos');
-                
-                // Función helper para verificar permisos
-                $tiene_permiso = function($seccion) use ($rol, $permisos) {
-                    // Super admin: Solo acceso a secciones administrativas
-                    if($rol == 'admin') {
-                        return in_array($seccion, ['categorias', 'productos', 'usuarios', 'sucursales']);
-                    }
-                    // Pedidos: Solo admin_sucursal y usuarios con permiso
-                    if($seccion == 'pedidos') {
-                        return $rol == 'admin_sucursal' || ($rol == 'usuario' && is_array($permisos) && isset($permisos['pedidos']) && $permisos['pedidos'] === true);
-                    }
-                    // Admin sucursal: acceso completo
-                    if($rol == 'admin_sucursal') return true;
-                    // Usuarios: permisos granulares
-                    if($rol == 'usuario' && is_array($permisos)) {
-                        return isset($permisos[$seccion]) && $permisos[$seccion] === true;
-                    }
-                    return false;
-                };
-                ?>
-                
-                <?php if($tiene_permiso('pedidos')): ?>
-                    <a href="<?= site_url('admin') ?>" class="nav-link">📦 Pedidos</a>
-                <?php endif; ?>
-                
-                <?php if($tiene_permiso('categorias')): ?>
-                    <a href="<?= site_url('admin/categorias') ?>" class="nav-link">🏷️ Categorías</a>
-                <?php endif; ?>
-                
-                <?php if($tiene_permiso('productos')): ?>
-                    <a href="<?= site_url('admin/productos') ?>" class="nav-link">🛍️ Productos</a>
-                <?php endif; ?>
-                
-                <?php if($tiene_permiso('mi_carta')): ?>
-                    <a href="<?= site_url('admin/mi_carta') ?>" class="nav-link">📋 Mi Carta</a>
-                <?php endif; ?>
-                
-                <?php if($tiene_permiso('mesas')): ?>
-                    <a href="<?= site_url('mesas') ?>" class="nav-link">🪑 Mesas</a>
-                <?php endif; ?>
-                
-                <?php if($tiene_permiso('cocina')): ?>
-                    <a href="<?= site_url('cocina') ?>" class="nav-link">🔥 Cocina</a>
-                <?php endif; ?>
-                
-                <?php if($rol == 'admin' || $rol == 'admin_sucursal'): ?>
-                    <a href="<?= site_url('admin/usuarios') ?>" class="nav-link active">👥 Usuarios</a>
-                <?php endif; ?>
-                
-                <?php if($rol == 'admin'): ?>
-                    <a href="<?= site_url('admin/sucursales') ?>" class="nav-link">🏢 Sucursales</a>
-                <?php endif; ?>
-                
-                <!-- Información del Usuario -->
-                <div class="dropdown me-2">
-                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
-                        <span class="d-none d-md-inline">👤 <?= $this->session->userdata('nombre') ?></span>
-                        <span class="d-md-none">👤</span>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><h6 class="dropdown-header">👤 <?= $this->session->userdata('nombre') ?></h6></li>
-                        <li><span class="dropdown-item-text">
-                            <?php 
-                            $rol_display = [
-                                'admin' => '🔧 Super Admin',
-                                'admin_sucursal' => '🏢 Admin Sucursal',
-                                'usuario' => '👨‍💼 Usuario'
-                            ];
-                            echo $rol_display[$rol] ?? $rol;
-                            ?>
-                        </span></li>
-                        <?php if($rol == 'admin_sucursal'): ?>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><span class="dropdown-item-text text-muted">🏢 <?= $this->session->userdata('nombre_sucursal') ?></span></li>
-                        <?php endif; ?>
-                    </ul>
-                </div>
-                
-                <a href="<?= site_url('login/salir') ?>" class="btn btn-danger btn-action">🚪 Salir</a>
-            </div>
-        </div>
-    </nav>
+    <?php 
+    $active_page = 'usuarios';
+    include(APPPATH . 'views/admin/components/navbar.php'); 
+    ?>
 
     <!-- Toast Container -->
     <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
@@ -355,14 +271,18 @@
                             <select name="rol" class="form-select" id="rolCrear" required 
                                     onchange="toggleSucursalField('crear')">
                                 <option value="">Selecciona un rol</option>
-                                <option value="admin">⭐ Admin</option>
+                                <?php if($this->session->userdata('rol') == 'admin'): ?>
+                                    <option value="admin">⭐ Super Admin</option>
+                                <?php endif; ?>
                                 <option value="admin_sucursal">👤 Admin Sucursal</option>
                                 <option value="usuario">👁️ Usuario</option>
                             </select>
                             <small class="form-text text-muted">
-                                <strong>Super Admin:</strong> Control total del sistema · 
+                                <?php if($this->session->userdata('rol') == 'admin'): ?>
+                                    <strong>Super Admin:</strong> Control total del sistema · 
+                                <?php endif; ?>
                                 <strong>Admin Sucursal:</strong> Gestión de su sucursal · 
-                                <strong>Usuario:</strong> Solo visualización
+                                <strong>Usuario:</strong> Permisos granulares configurables
                             </small>
                         </div>
                         <div class="mb-3 sucursal-field" id="sucursalFieldCrear">
@@ -473,12 +393,16 @@
                             <label class="form-label">🎭 Rol *</label>
                             <select name="rol" id="editarRol" class="form-select" required 
                                     onchange="toggleSucursalField('editar')">
-                                <option value="admin">⭐ Admin</option>
+                                <?php if($this->session->userdata('rol') == 'admin'): ?>
+                                    <option value="admin">⭐ Super Admin</option>
+                                <?php endif; ?>
                                 <option value="admin_sucursal">👤 Admin Sucursal</option>
                                 <option value="usuario">👁️ Usuario</option>
                             </select>
                             <small class="form-text text-muted">
-                                <strong>Super Admin:</strong> Gestión administrativa · 
+                                <?php if($this->session->userdata('rol') == 'admin'): ?>
+                                    <strong>Super Admin:</strong> Gestión administrativa · 
+                                <?php endif; ?>
                                 <strong>Admin Sucursal:</strong> Gestión operativa completa · 
                                 <strong>Usuario:</strong> Permisos granulares configurables
                             </small>
