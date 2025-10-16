@@ -1,0 +1,233 @@
+=== EDITAR SUCURSAL ===
+POST data: Array
+(
+    [id_sucursal] => 1
+    [nombre] => Sucursal Centro
+    [direccion] => Av. Principal 123, Centro
+    [telefono] => +56944444444
+    [email] => centro@fudo.cl
+    [whatsapp] => 
+    [instagram] => 
+)
+
+Datos a actualizar: Array
+(
+    [nombre] => Sucursal Centro
+    [direccion] => Av. Principal 123, Centro
+    [telefono] => +56944444444
+    [email] => centro@fudo.cl
+    [whatsapp] => 
+    [instagram] => 
+)
+
+=== EDITAR SUCURSAL ===
+POST data: Array
+(
+    [id_sucursal] => 1
+    [nombre] => Sucursal Centro
+    [direccion] => Av. Principal 123, Centro
+    [telefono] => +56944444445
+    [email] => centro@fudo.cl
+    [whatsapp] => 
+    [instagram] => 
+)
+
+Datos a actualizar: Array
+(
+    [nombre] => Sucursal Centro
+    [direccion] => Av. Principal 123, Centro
+    [telefono] => +56944444445
+    [email] => centro@fudo.cl
+    [whatsapp] => 
+    [instagram] => 
+)
+
+=== EDITAR SUCURSAL ===
+POST data: Array
+(
+    [id_sucursal] => 1
+    [nombre] => Sucursal Centro
+    [direccion] => Av. Principal 123, Centro
+    [telefono] => +56922222222
+    [email] => centro@fudo.cl
+    [whatsapp] => 
+    [instagram] => 
+)
+
+Datos a actualizar: Array
+(
+    [nombre] => Sucursal Centro
+    [direccion] => Av. Principal 123, Centro
+    [telefono] => +56922222222
+    [email] => centro@fudo.cl
+    [whatsapp] => 
+    [instagram] => 
+)
+
+Intentando actualizar...
+=== EDITAR SUCURSAL ===
+POST data: Array
+(
+    [id_sucursal] => 1
+    [nombre] => Sucursal Centro
+    [direccion] => Av. Principal 123, Centro
+    [telefono] => +56922222222
+    [email] => centro@fudo.cl
+    [whatsapp] => 
+    [instagram] => 
+)
+
+Datos a actualizar: Array
+(
+    [nombre] => Sucursal Centro
+    [direccion] => Av. Principal 123, Centro
+    [telefono] => +56922222222
+    [email] => centro@fudo.cl
+    [whatsapp] => 
+    [instagram] => 
+)
+
+Intentando actualizar...
+=== EDITAR SUCURSAL ===
+POST data: Array
+(
+    [id_sucursal] => 1
+    [nombre] => Sucursal Centro
+    [direccion] => Av. Principal 123, Centro
+    [telefono] => +56922222222
+    [email] => centro@fudo.cl
+    [whatsapp] => +56922222222
+    [instagram] => 2
+)
+
+Datos a actualizar: Array
+(
+    [nombre] => Sucursal Centro
+    [direccion] => Av. Principal 123, Centro
+    [telefono] => +56922222222
+    [email] => centro@fudo.cl
+    [whatsapp] => +56922222222
+    [instagram] => 2
+)
+
+Intentando actualizar...
+=== EDITAR SUCURSAL ===
+POST data: Array
+(
+    [id_sucursal] => 1
+    [nombre] => Sucursal Centro
+    [direccion] => Av. Principal 123, Centro
+    [telefono] => +56922222222
+    [email] => centro@fudo.cl
+    [whatsapp] => 
+    [instagram] => 
+)
+
+Datos a actualizar: Array
+(
+    [nombre] => Sucursal Centro
+    [direccion] => Av. Principal 123, Centro
+    [telefono] => +56922222222
+    [email] => centro@fudo.cl
+)
+
+Intentando actualizar...
+Resultado actualización: TRUE
+Affected rows: 1
+=== EDITAR SUCURSAL ===
+POST data: Array
+(
+    [id_sucursal] => 1
+    [nombre] => Sucursal Centro
+    [direccion] => Av. Principal 123, Centro
+    [telefono] => +56922222222
+    [email] => centro@fudo2.cl
+    [whatsapp] => 1
+    [instagram] => 1
+)
+
+Datos a actualizar: Array
+(
+    [nombre] => Sucursal Centro
+    [direccion] => Av. Principal 123, Centro
+    [telefono] => +56922222222
+    [email] => centro@fudo2.cl
+    [whatsapp] => 1
+    [instagram] => 1
+)
+
+Intentando actualizar...
+Resultado actualización: TRUE
+Affected rows: 1
+=== EDITAR SUCURSAL ===
+POST data: Array
+(
+    [id_sucursal] => 1
+    [nombre] => Sucursal Centro
+    [direccion] => Av. Principal 123, Centro
+    [telefono] => +56922222222
+    [email] => centro@fudo.cl
+    [whatsapp] => 
+    [instagram] => 
+)
+
+Datos a actualizar: Array
+(
+    [nombre] => Sucursal Centro
+    [direccion] => Av. Principal 123, Centro
+    [telefono] => +56922222222
+    [email] => centro@fudo.cl
+)
+
+Intentando actualizar...
+Resultado actualización: TRUE
+Affected rows: 1
+=== EDITAR SUCURSAL ===
+POST data: Array
+(
+    [id_sucursal] => 1
+    [nombre] => Sucursal Centro
+    [direccion] => Av. Principal 123, Centro
+    [telefono] => +56922222222
+    [email] => centro@fudo.cl
+    [whatsapp] => 
+    [instagram] => 1
+)
+
+Datos a actualizar: Array
+(
+    [nombre] => Sucursal Centro
+    [direccion] => Av. Principal 123, Centro
+    [telefono] => +56922222222
+    [email] => centro@fudo.cl
+    [instagram] => 1
+)
+
+Intentando actualizar...
+Resultado actualización: TRUE
+Affected rows: 1
+=== EDITAR SUCURSAL ===
+POST data: Array
+(
+    [id_sucursal] => 1
+    [nombre] => Sucursal Centro
+    [direccion] => Av. Principal 123, Centro
+    [telefono] => +56922222222
+    [email] => centro@fudo.cl
+    [whatsapp] => 2
+    [instagram] => 2
+)
+
+Datos a actualizar: Array
+(
+    [nombre] => Sucursal Centro
+    [direccion] => Av. Principal 123, Centro
+    [telefono] => +56922222222
+    [email] => centro@fudo.cl
+    [whatsapp] => 2
+    [instagram] => 2
+)
+
+Intentando actualizar...
+Resultado actualización: TRUE
+Affected rows: 1

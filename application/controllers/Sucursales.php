@@ -63,32 +63,41 @@ class Sucursales extends CI_Controller {
         header('Content-Type: application/json');
         
         $id_sucursal = $this->input->post('id_sucursal');
-        $nombre = trim($this->input->post('nombre'));
-        $direccion = trim($this->input->post('direccion'));
-        $telefono = trim($this->input->post('telefono'));
-        $email = trim($this->input->post('email'));
-        $whatsapp = trim($this->input->post('whatsapp'));
-        $instagram = trim($this->input->post('instagram'));
+        $nombre = $this->input->post('nombre');
+        $direccion = $this->input->post('direccion');
+        $telefono = $this->input->post('telefono');
+        $email = $this->input->post('email');
+        $whatsapp = $this->input->post('whatsapp');
+        $instagram = $this->input->post('instagram');
 
-        // Validaciones
+        // Validaciones básicas
         if(empty($id_sucursal) || empty($nombre)) {
-            echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
+            echo json_encode(['success' => false, 'message' => 'ID y nombre son obligatorios']);
             return;
         }
 
-        $datos = [
+        // Incluir todos los campos, permitiendo valores vacíos para campos opcionales
+        $datos = array(
             'nombre' => $nombre,
-            'direccion' => $direccion,
-            'telefono' => $telefono,
-            'email' => $email,
-            'whatsapp' => $whatsapp,
-            'instagram' => $instagram
-        ];
+            'direccion' => !empty($direccion) ? $direccion : null,
+            'telefono' => !empty($telefono) ? $telefono : null,
+            'email' => !empty($email) ? $email : null,
+            'whatsapp' => !empty($whatsapp) ? $whatsapp : null,
+            'instagram' => !empty($instagram) ? $instagram : null
+        );
 
-        if($this->Sucursal_model->actualizar($id_sucursal, $datos)) {
-            echo json_encode(['success' => true, 'message' => 'Sucursal actualizada exitosamente']);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Error al actualizar la sucursal']);
+        try {
+            // Actualización directa con query builder
+            $this->db->where('id_sucursal', $id_sucursal);
+            $resultado = $this->db->update('sucursales', $datos);
+            
+            if($resultado) {
+                echo json_encode(['success' => true, 'message' => 'Sucursal actualizada exitosamente']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Error al actualizar la sucursal']);
+            }
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Error interno: ' . $e->getMessage()]);
         }
     }
 
@@ -132,7 +141,9 @@ class Sucursales extends CI_Controller {
             return;
         }
 
-        if($this->Sucursal_model->cambiar_estado($id_sucursal, $estado)) {
+        $resultado = $this->Sucursal_model->cambiar_estado($id_sucursal, $estado);
+        
+        if($resultado) {
             echo json_encode(['success' => true, 'message' => 'Estado actualizado']);
         } else {
             echo json_encode(['success' => false, 'message' => 'Error al actualizar el estado']);

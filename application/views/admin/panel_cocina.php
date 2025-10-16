@@ -253,6 +253,31 @@
                     <a href="<?= site_url('admin/sucursales') ?>" class="nav-link">🏢 Sucursales</a>
                 <?php endif; ?>
                 
+                <!-- Información del Usuario -->
+                <div class="dropdown me-2">
+                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
+                        <span class="d-none d-md-inline">👤 <?= $this->session->userdata('nombre') ?></span>
+                        <span class="d-md-none">👤</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><h6 class="dropdown-header">👤 <?= $this->session->userdata('nombre') ?></h6></li>
+                        <li><span class="dropdown-item-text">
+                            <?php 
+                            $rol_display = [
+                                'admin' => '🔧 Super Admin',
+                                'admin_sucursal' => '🏢 Admin Sucursal',
+                                'usuario' => '👨‍💼 Usuario'
+                            ];
+                            echo $rol_display[$rol] ?? $rol;
+                            ?>
+                        </span></li>
+                        <?php if($rol == 'admin_sucursal'): ?>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><span class="dropdown-item-text text-muted">🏢 <?= $this->session->userdata('nombre_sucursal') ?></span></li>
+                        <?php endif; ?>
+                    </ul>
+                </div>
+                
                 <a href="<?= site_url('login/salir') ?>" class="btn btn-danger btn-action">🚪 Salir</a>
             </div>
         </div>

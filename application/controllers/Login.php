@@ -21,6 +21,13 @@ class Login extends CI_Controller {
 
         $u = $this->Usuario_model->verificar_usuario($usuario,$contrasena);
         if($u){
+            // Verificar si la sucursal está activa (solo para usuarios no admin)
+            if($u->rol != 'admin' && isset($u->sucursal_activa) && $u->sucursal_activa === 'f') {
+                $this->session->set_flashdata('error','Su sucursal está desactivada. Contacte al administrador.');
+                redirect('login');
+                return;
+            }
+            
             // Parsear permisos si es rol usuario
             $permisos = null;
             if($u->rol == 'usuario' && !empty($u->permisos)) {

@@ -13,7 +13,7 @@ class Usuario_model extends CI_Model {
      */
     public function verificar_usuario($usuario, $contrasena) {
         $query = $this->db->query(
-            "SELECT u.*, s.nombre as nombre_sucursal 
+            "SELECT u.*, s.nombre as nombre_sucursal, s.activo as sucursal_activa 
              FROM usuarios_admin u 
              LEFT JOIN sucursales s ON u.id_sucursal = s.id_sucursal
              WHERE u.usuario = ? AND u.activo = TRUE AND u.contrasena = crypt(?, u.contrasena)",

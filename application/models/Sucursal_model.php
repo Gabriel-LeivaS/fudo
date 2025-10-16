@@ -63,8 +63,10 @@ class Sucursal_model extends CI_Model {
      * Cambiar estado de una sucursal (activo/inactivo)
      */
     public function cambiar_estado($id_sucursal, $estado) {
+        // Asegurar que el estado sea boolean para PostgreSQL
+        $estado_bool = $estado ? true : false;
         return $this->db->where('id_sucursal', $id_sucursal)
-                        ->update('sucursales', ['activo' => $estado]);
+                        ->update('sucursales', ['activo' => $estado_bool]);
     }
 
     /**

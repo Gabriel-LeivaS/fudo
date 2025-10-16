@@ -22,6 +22,9 @@ class Admin extends CI_Controller {
         $this->rol = $this->session->userdata('rol');
         $this->id_sucursal = $this->session->userdata('id_sucursal');
         $this->permisos = $this->session->userdata('permisos');
+        
+        // Verificar si la sucursal sigue activa (solo para usuarios no admin)
+        $this->verificar_sucursal_activa();
     }
     
     /**
@@ -990,6 +993,25 @@ class Admin extends CI_Controller {
             echo json_encode(['success' => false, 'message' => 'Error al actualizar el estado']);
         }
     }
+    
+    /**
+     * Verificar si la sucursal del usuario sigue activa
+     */
+    private function verificar_sucursal_activa() {
+        // Solo verificar para usuarios no admin
+        if($this->rol == 'admin') {
+            return;
+        }
+        
+        // Verificar si la sucursal sigue activa
+        if($this->id_sucursal) {
+            $sucursal = $this->Sucursal_model->obtener_por_id($this->id_sucursal);
+            if(!$sucursal || $sucursal->activo === 'f' || $sucursal->activo === false) {
+                // Cerrar sesión y redirigir al login
+                $this->session->sess_destroy();
+                $this->session->set_flashdata('error', 'Su sucursal ha sido desactivada. Contacte al administrador.');
+                redirect('login');
+            }
+        }
+    }
 }
-
-

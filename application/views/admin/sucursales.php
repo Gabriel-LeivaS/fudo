@@ -291,6 +291,31 @@
                     <a href="<?= site_url('admin/sucursales') ?>" class="nav-link active">🏢 Sucursales</a>
                 <?php endif; ?>
                 
+                <!-- Información del Usuario -->
+                <div class="dropdown me-2">
+                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
+                        <span class="d-none d-md-inline">👤 <?= $this->session->userdata('nombre') ?></span>
+                        <span class="d-md-none">👤</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><h6 class="dropdown-header">👤 <?= $this->session->userdata('nombre') ?></h6></li>
+                        <li><span class="dropdown-item-text">
+                            <?php 
+                            $rol_display = [
+                                'admin' => '🔧 Super Admin',
+                                'admin_sucursal' => '🏢 Admin Sucursal',
+                                'usuario' => '👨‍💼 Usuario'
+                            ];
+                            echo $rol_display[$rol] ?? $rol;
+                            ?>
+                        </span></li>
+                        <?php if($rol == 'admin_sucursal'): ?>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><span class="dropdown-item-text text-muted">🏢 <?= $this->session->userdata('nombre_sucursal') ?></span></li>
+                        <?php endif; ?>
+                    </ul>
+                </div>
+                
                 <a href="<?= site_url('login/salir') ?>" class="btn btn-danger btn-action">🚪 Salir</a>
             </div>
         </div>
@@ -380,10 +405,10 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <?php if ($sucursal->activo): ?>
-                                                <span class="badge badge-success">Activa</span>
+                                            <?php if ($sucursal->activo === 't' || $sucursal->activo === true): ?>
+                                                <span class="badge bg-success">Activa</span>
                                             <?php else: ?>
-                                                <span class="badge badge-danger">Inactiva</span>
+                                                <span class="badge bg-danger">Inactiva</span>
                                             <?php endif; ?>
                                         </td>
                                         <td class="text-center">
@@ -397,10 +422,11 @@
                                                     title="Editar">
                                                 ✏️
                                             </button>
-                                            <button class="btn <?= $sucursal->activo ? 'btn-secondary' : 'btn-success' ?> btn-action btn-sm" 
-                                                    onclick="cambiarEstado(<?= $sucursal->id_sucursal ?>, <?= $sucursal->activo ? 'false' : 'true' ?>)"
-                                                    title="<?= $sucursal->activo ? 'Desactivar' : 'Activar' ?>">
-                                                <?= $sucursal->activo ? '🔒' : '✅' ?>
+                                            <?php $activo = ($sucursal->activo === 't' || $sucursal->activo === true); ?>
+                                            <button class="btn <?= $activo ? 'btn-secondary' : 'btn-success' ?> btn-action btn-sm" 
+                                                    onclick="cambiarEstado(<?= $sucursal->id_sucursal ?>, <?= $activo ? 'false' : 'true' ?>)"
+                                                    title="<?= $activo ? 'Desactivar' : 'Activar' ?>">
+                                                <?= $activo ? '🔒' : '✅' ?>
                                             </button>
                                             <button class="btn btn-danger btn-action btn-sm" 
                                                     onclick="eliminarSucursal(<?= $sucursal->id_sucursal ?>)"
@@ -432,33 +458,33 @@
                         
                         <div class="mb-3">
                             <label for="nombre" class="form-label">Nombre de la Sucursal *</label>
-                            <input type="text" class="form-control" id="nombre" name="nombre" required>
+                            <input type="text" class="form-control" id="nombre" name="nombre" autocomplete="organization" required>
                         </div>
 
                         <div class="mb-3">
                             <label for="direccion" class="form-label">Dirección</label>
-                            <input type="text" class="form-control" id="direccion" name="direccion">
+                            <input type="text" class="form-control" id="direccion" name="direccion" autocomplete="street-address">
                         </div>
 
                         <div class="mb-3">
                             <label for="telefono" class="form-label">Teléfono</label>
-                            <input type="tel" class="form-control" id="telefono" name="telefono">
+                            <input type="tel" class="form-control" id="telefono" name="telefono" autocomplete="tel">
                         </div>
 
                         <div class="mb-3">
                             <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" name="email">
+                            <input type="email" class="form-control" id="email" name="email" autocomplete="email">
                         </div>
 
                         <div class="mb-3">
                             <label for="whatsapp" class="form-label">WhatsApp</label>
-                            <input type="tel" class="form-control" id="whatsapp" name="whatsapp" placeholder="Ej: +56912345678">
+                            <input type="tel" class="form-control" id="whatsapp" name="whatsapp" autocomplete="tel" placeholder="Ej: +56912345678">
                             <div class="form-text">Número de WhatsApp con código de país (Ej: +56912345678)</div>
                         </div>
 
                         <div class="mb-3">
                             <label for="instagram" class="form-label">Instagram</label>
-                            <input type="text" class="form-control" id="instagram" name="instagram" placeholder="Ej: @restaurante_centro">
+                            <input type="text" class="form-control" id="instagram" name="instagram" autocomplete="username" placeholder="Ej: @restaurante_centro">
                             <div class="form-text">Usuario de Instagram (con o sin @)</div>
                         </div>
                     </form>
@@ -493,7 +519,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        const baseUrl = '<?= site_url() ?>';
+        const baseUrl = '<?= rtrim(site_url(), '/') ?>';
         let modalSucursal;
         let modalEstadisticas;
         let modoEdicion = false;
@@ -517,7 +543,8 @@
             
             try {
                 // Obtener datos de la sucursal via AJAX
-                const response = await fetch(`${baseUrl}/sucursales/obtener/${id}`);
+                const url = `${baseUrl}/sucursales/obtener/${id}`;
+                const response = await fetch(url);
                 const sucursal = await response.json();
                 
                 if (sucursal.success) {
@@ -642,7 +669,7 @@
         }
 
         async function cambiarEstado(id, nuevoEstado) {
-            const activar = nuevoEstado === 'true';
+            const activar = nuevoEstado === 'true' || nuevoEstado === true;
             
             const result = await Swal.fire({
                 title: activar ? '¿Activar Sucursal?' : '¿Desactivar Sucursal?',
@@ -662,7 +689,9 @@
                 formData.append('id_sucursal', id);
                 formData.append('estado', nuevoEstado);
                 
-                const response = await fetch(`${baseUrl}/sucursales/cambiar_estado`, {
+                const url = `${baseUrl}/sucursales/cambiar_estado`;
+                
+                const response = await fetch(url, {
                     method: 'POST',
                     body: formData
                 });
@@ -670,15 +699,20 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    await Swal.fire({
+                    // Actualizar visualmente el estado sin recargar INMEDIATAMENTE
+                    actualizarEstadoVisual(id, nuevoEstado === 'true' || nuevoEstado === true);
+                    
+                    // Mostrar notificación de éxito sin bloquear
+                    Swal.fire({
                         title: '¡Éxito!',
                         text: result.message,
                         icon: 'success',
-                        timer: 2000,
+                        timer: 1500,
                         timerProgressBar: true,
-                        showConfirmButton: false
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
                     });
-                    location.reload();
                 } else {
                     Swal.fire({
                         title: 'Error',
@@ -694,6 +728,34 @@
                 });
                 console.error('Error:', error);
             }
+        }
+
+        function actualizarEstadoVisual(id, activo) {
+            // Encontrar la fila de la sucursal
+            const fila = document.querySelector(`button[onclick*="cambiarEstado(${id},"]`).closest('tr');
+            
+            if (!fila) {
+                console.error('No se pudo encontrar la fila para la sucursal ID:', id);
+                return;
+            }
+            
+            // Actualizar el badge de estado
+            const estadoCell = fila.cells[4]; // Columna de estado (ID, Nombre, Dirección, Contacto, Estado)
+            if (!estadoCell) {
+                console.error('No se pudo encontrar la celda de estado');
+                return;
+            }
+            
+            estadoCell.innerHTML = activo ? 
+                '<span class="badge bg-success">Activa</span>' : 
+                '<span class="badge bg-danger">Inactiva</span>';
+            
+            // Actualizar el botón de cambiar estado
+            const botonEstado = fila.querySelector(`button[onclick*="cambiarEstado(${id},"]`);
+            botonEstado.className = `btn ${activo ? 'btn-secondary' : 'btn-success'} btn-action btn-sm`;
+            botonEstado.title = activo ? 'Desactivar' : 'Activar';
+            botonEstado.innerHTML = activo ? '🔒' : '✅';
+            botonEstado.setAttribute('onclick', `cambiarEstado(${id}, ${activo ? 'false' : 'true'})`);
         }
 
         async function verEstadisticas(id) {

@@ -23,8 +23,11 @@ CREATE TABLE sucursales (
     telefono VARCHAR(20),
     email VARCHAR(100),
     activo BOOLEAN DEFAULT TRUE,
-    fecha_creacion TIMESTAMP DEFAULT NOW()
+    fecha_creacion TIMESTAMP DEFAULT NOW(),
+    whatsapp VARCHAR(20),
+    instagram VARCHAR(50)
 );
+
 
 -- Sucursales de ejemplo
 INSERT INTO sucursales (nombre, direccion, telefono, email) VALUES
