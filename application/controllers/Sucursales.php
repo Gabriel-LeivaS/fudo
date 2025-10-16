@@ -33,6 +33,8 @@ class Sucursales extends CI_Controller {
         $direccion = trim($this->input->post('direccion'));
         $telefono = trim($this->input->post('telefono'));
         $email = trim($this->input->post('email'));
+        $whatsapp = trim($this->input->post('whatsapp'));
+        $instagram = trim($this->input->post('instagram'));
 
         // Validaciones
         if(empty($nombre)) {
@@ -45,6 +47,8 @@ class Sucursales extends CI_Controller {
             'direccion' => $direccion,
             'telefono' => $telefono,
             'email' => $email,
+            'whatsapp' => $whatsapp,
+            'instagram' => $instagram,
             'activo' => true
         ];
 
@@ -63,6 +67,8 @@ class Sucursales extends CI_Controller {
         $direccion = trim($this->input->post('direccion'));
         $telefono = trim($this->input->post('telefono'));
         $email = trim($this->input->post('email'));
+        $whatsapp = trim($this->input->post('whatsapp'));
+        $instagram = trim($this->input->post('instagram'));
 
         // Validaciones
         if(empty($id_sucursal) || empty($nombre)) {
@@ -74,7 +80,9 @@ class Sucursales extends CI_Controller {
             'nombre' => $nombre,
             'direccion' => $direccion,
             'telefono' => $telefono,
-            'email' => $email
+            'email' => $email,
+            'whatsapp' => $whatsapp,
+            'instagram' => $instagram
         ];
 
         if($this->Sucursal_model->actualizar($id_sucursal, $datos)) {
@@ -135,5 +143,22 @@ class Sucursales extends CI_Controller {
         header('Content-Type: application/json');
         $stats = $this->Sucursal_model->obtener_estadisticas($id_sucursal);
         echo json_encode($stats);
+    }
+
+    public function obtener($id_sucursal) {
+        header('Content-Type: application/json');
+        
+        if(empty($id_sucursal)) {
+            echo json_encode(['success' => false, 'message' => 'ID de sucursal no proporcionado']);
+            return;
+        }
+
+        $sucursal = $this->Sucursal_model->obtener_por_id($id_sucursal);
+        
+        if($sucursal) {
+            echo json_encode(['success' => true, 'data' => $sucursal]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Sucursal no encontrada']);
+        }
     }
 }

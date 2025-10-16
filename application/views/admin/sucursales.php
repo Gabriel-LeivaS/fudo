@@ -333,8 +333,7 @@
                                 <th>ID</th>
                                 <th>Nombre</th>
                                 <th>Dirección</th>
-                                <th>Teléfono</th>
-                                <th>Email</th>
+                                <th>Contacto</th>
                                 <th>Estado</th>
                                 <th class="text-center">Acciones</th>
                             </tr>
@@ -361,8 +360,25 @@
                                             <?php endif; ?>
                                         </td>
                                         <td><?= htmlspecialchars($sucursal->direccion ?? 'N/A') ?></td>
-                                        <td><?= htmlspecialchars($sucursal->telefono ?? 'N/A') ?></td>
-                                        <td><?= htmlspecialchars($sucursal->email ?? 'N/A') ?></td>
+                                        <td>
+                                            <div class="contact-info">
+                                                <?php if (!empty($sucursal->telefono)): ?>
+                                                    <div><small>📞 <?= htmlspecialchars($sucursal->telefono) ?></small></div>
+                                                <?php endif; ?>
+                                                <?php if (!empty($sucursal->email)): ?>
+                                                    <div><small>📧 <?= htmlspecialchars($sucursal->email) ?></small></div>
+                                                <?php endif; ?>
+                                                <?php if (!empty($sucursal->whatsapp)): ?>
+                                                    <div><small>📱 <?= htmlspecialchars($sucursal->whatsapp) ?></small></div>
+                                                <?php endif; ?>
+                                                <?php if (!empty($sucursal->instagram)): ?>
+                                                    <div><small>📷 <?= htmlspecialchars($sucursal->instagram) ?></small></div>
+                                                <?php endif; ?>
+                                                <?php if (empty($sucursal->telefono) && empty($sucursal->email) && empty($sucursal->whatsapp) && empty($sucursal->instagram)): ?>
+                                                    <small class="text-muted">Sin contacto</small>
+                                                <?php endif; ?>
+                                            </div>
+                                        </td>
                                         <td>
                                             <?php if ($sucursal->activo): ?>
                                                 <span class="badge badge-success">Activa</span>
@@ -433,6 +449,18 @@
                             <label for="email" class="form-label">Email</label>
                             <input type="email" class="form-control" id="email" name="email">
                         </div>
+
+                        <div class="mb-3">
+                            <label for="whatsapp" class="form-label">WhatsApp</label>
+                            <input type="tel" class="form-control" id="whatsapp" name="whatsapp" placeholder="Ej: +56912345678">
+                            <div class="form-text">Número de WhatsApp con código de país (Ej: +56912345678)</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="instagram" class="form-label">Instagram</label>
+                            <input type="text" class="form-control" id="instagram" name="instagram" placeholder="Ej: @restaurante_centro">
+                            <div class="form-text">Usuario de Instagram (con o sin @)</div>
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -483,20 +511,39 @@
             modalSucursal.show();
         }
 
-        function abrirModalEditar(id) {
+        async function abrirModalEditar(id) {
             modoEdicion = true;
             document.getElementById('modalTitle').textContent = 'Editar Sucursal';
             
-            // Buscar la sucursal en la tabla
-            const row = document.querySelector(`tr[data-id="${id}"]`);
-            if (row) {
-                const cells = row.cells;
-                document.getElementById('id_sucursal').value = id;
-                document.getElementById('nombre').value = cells[1].querySelector('strong').textContent;
-                document.getElementById('direccion').value = cells[2].textContent !== 'N/A' ? cells[2].textContent : '';
-                document.getElementById('telefono').value = cells[3].textContent !== 'N/A' ? cells[3].textContent : '';
-                document.getElementById('email').value = cells[4].textContent !== 'N/A' ? cells[4].textContent : '';
-                modalSucursal.show();
+            try {
+                // Obtener datos de la sucursal via AJAX
+                const response = await fetch(`${baseUrl}/sucursales/obtener/${id}`);
+                const sucursal = await response.json();
+                
+                if (sucursal.success) {
+                    const data = sucursal.data;
+                    document.getElementById('id_sucursal').value = id;
+                    document.getElementById('nombre').value = data.nombre || '';
+                    document.getElementById('direccion').value = data.direccion || '';
+                    document.getElementById('telefono').value = data.telefono || '';
+                    document.getElementById('email').value = data.email || '';
+                    document.getElementById('whatsapp').value = data.whatsapp || '';
+                    document.getElementById('instagram').value = data.instagram || '';
+                    modalSucursal.show();
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'No se pudo cargar la información de la sucursal',
+                        icon: 'error'
+                    });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error de conexión al cargar la sucursal',
+                    icon: 'error'
+                });
             }
         }
 

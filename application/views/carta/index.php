@@ -26,6 +26,7 @@
     .hdr-contact{ display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
     .hdr-contact-label{ font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; font-weight:600; }
     .hdr-contact-icons{ display:flex; gap:12px; font-size:20px; }
+    .hdr-contact:empty{ display:none; }
     .search{ margin-top:16px; display:flex; gap:10px; align-items:center; }
     .search input{ flex:1; background:#fff; border-radius:28px; padding:12px 16px; box-shadow:0 12px 36px rgba(0,0,0,0.06); border:none; font-size:15px; }
     .scroller-wrap{ position:relative; margin-top:14px; }
@@ -95,14 +96,22 @@
         <div class="hdr-sub">📍 <?= htmlspecialchars($mesa->direccion ?? 'Dirección no disponible') ?></div>
         <div class="hdr-sub">☎️ <?= htmlspecialchars($mesa->telefono ?? 'Teléfono no disponible') ?> · 🪑 Mesa #<?= $id_mesa ?></div>
       </div>
+      <?php if (!empty($mesa->telefono) || !empty($mesa->whatsapp) || !empty($mesa->instagram)): ?>
       <div class="hdr-contact">
-        <div class="hdr-contact-label">Síguenos</div>
+        <div class="hdr-contact-label">Contacto</div>
         <div class="hdr-contact-icons">
-          <a href="tel:5491168718038" style="color:#a3c06b;text-decoration:none;" title="Llamar">📞</a>
-          <a href="https://wa.me/5491168718038" target="_blank" style="color:#25D366;text-decoration:none;" title="WhatsApp">💬</a>
-          <a href="#" style="color:#E4405F;text-decoration:none;" title="Instagram">📷</a>
+          <?php if (!empty($mesa->telefono)): ?>
+            <a href="tel:<?= htmlspecialchars($mesa->telefono) ?>" style="color:#a3c06b;text-decoration:none;" title="Llamar">📞</a>
+          <?php endif; ?>
+          <?php if (!empty($mesa->whatsapp)): ?>
+            <a href="https://wa.me/<?= htmlspecialchars(str_replace(['+', ' ', '-'], '', $mesa->whatsapp)) ?>" target="_blank" style="color:#25D366;text-decoration:none;" title="WhatsApp">💬</a>
+          <?php endif; ?>
+          <?php if (!empty($mesa->instagram)): ?>
+            <a href="https://instagram.com/<?= htmlspecialchars(ltrim($mesa->instagram, '@')) ?>" target="_blank" style="color:#E4405F;text-decoration:none;" title="Instagram">📷</a>
+          <?php endif; ?>
         </div>
       </div>
+      <?php endif; ?>
     </header>
 
     <div class="search" role="search">

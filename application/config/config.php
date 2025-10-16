@@ -1,7 +1,10 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-$config['base_url'] = 'http://localhost/fudo/';
+// Detectar automáticamente la URL base según el host
+$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$config['base_url'] = $protocol . $host . '/fudo/';
 
 $config['index_page'] = '';
 // Si tu servidor Apache no tiene mod_rewrite habilitado, vuelve a poner 'index.php' aquí.
