@@ -27,7 +27,7 @@ $current_page = isset($active_page) ? $active_page : '';
 
 <!-- Navbar Superior -->
 <nav class="navbar navbar-expand-lg">
-    <div class="container-fluid d-flex justify-content-between align-items-center">
+    <div class="container-fluid">
 
         <!-- Logo -->
         <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="<?= site_url('admin') ?>">
@@ -50,10 +50,10 @@ $current_page = isset($active_page) ? $active_page : '';
 
             <!-- Menú desplegable -->
             <div class="dropdown">
-                <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
                     <i class="bi bi-list me-1"></i> Menú
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end shadow-lg p-3" style="min-width: 250px;">
+                <ul class="dropdown-menu dropdown-menu-end shadow-lg p-3 responsive-dropdown" style="min-width: 250px;">
 
                     <!-- Enlaces del panel -->
                     <?php if($tiene_permiso('pedidos')): ?>

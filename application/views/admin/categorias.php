@@ -113,23 +113,41 @@
                                             <?php endif; ?>
                                         </td>
                                         <td class="text-center">
+                                            <?php if($tiene_permiso('categorias')): ?>
                                             <div class="action-buttons">
-                                                <?php if($tiene_permiso('categorias')): ?>
-                                                <button class="btn btn-warning btn-action" 
+                                                <!-- Desktop: Botones normales -->
+                                                <button class="btn btn-warning btn-action d-none d-lg-inline-block" 
                                                         onclick="abrirModalEditar(<?= $cat->id_categoria ?>, '<?= htmlspecialchars($cat->nombre, ENT_QUOTES) ?>')">
-                                                    ✏️
+                                                    ✏️ Editar
                                                 </button>
-                                                <button class="btn <?= $cat->estado ? 'btn-secondary' : 'btn-success' ?> btn-action btn-toggle" 
+                                                <button class="btn <?= $cat->estado ? 'btn-secondary' : 'btn-success' ?> btn-action btn-toggle d-none d-lg-inline-block" 
                                                         onclick="toggleEstado(<?= $cat->id_categoria ?>, <?= $cat->estado ? 'false' : 'true' ?>)"
                                                         title="<?= $cat->estado ? 'Desactivar' : 'Activar' ?>">
-                                                    <?= $cat->estado ? '👁️‍🗨️' : '👁️' ?>
+                                                    <?= $cat->estado ? '👁️‍🗨️ Ocultar' : '👁️ Mostrar' ?>
                                                 </button>
-                                                <button class="btn btn-danger btn-action" 
+                                                <button class="btn btn-danger btn-action d-none d-lg-inline-block" 
                                                         onclick="eliminarCategoria(<?= $cat->id_categoria ?>, '<?= htmlspecialchars($cat->nombre, ENT_QUOTES) ?>')">
-                                                    🗑️
+                                                    🗑️ Eliminar
                                                 </button>
-                                                <?php endif; ?>
+                                                
+                                                <!-- Móviles/Tablets: Dropdown -->
+                                                <button class="mobile-action-trigger d-lg-none" onclick="toggleMobileDropdown(this)">
+                                                    ⚙️ Acciones <span style="font-size: 10px;">▼</span>
+                                                </button>
+                                                <div class="mobile-actions-dropdown">
+                                                    <button class="btn btn-warning" onclick="abrirModalEditar(<?= $cat->id_categoria ?>, '<?= htmlspecialchars($cat->nombre, ENT_QUOTES) ?>')">
+                                                        ✏️ Editar
+                                                    </button>
+                                                    <button class="btn <?= $cat->estado ? 'btn-secondary' : 'btn-success' ?>" 
+                                                            onclick="toggleEstado(<?= $cat->id_categoria ?>, <?= $cat->estado ? 'false' : 'true' ?>)">
+                                                        <?= $cat->estado ? '👁️‍🗨️ Ocultar' : '👁️ Mostrar' ?>
+                                                    </button>
+                                                    <button class="btn btn-danger" onclick="eliminarCategoria(<?= $cat->id_categoria ?>, '<?= htmlspecialchars($cat->nombre, ENT_QUOTES) ?>')">
+                                                        🗑️ Eliminar
+                                                    </button>
+                                                </div>
                                             </div>
+                                            <?php endif; ?>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -503,6 +521,42 @@
             // Actualizar contador
             if(contadorBadge) {
                 contadorBadge.textContent = contador + ' categorías';
+            }
+        }
+
+        // Función para toggle del dropdown móvil
+        function toggleMobileDropdown(trigger) {
+            const dropdown = trigger.nextElementSibling;
+            const isOpen = dropdown.classList.contains('show');
+            
+            // Cerrar todos los dropdowns abiertos
+            document.querySelectorAll('.mobile-actions-dropdown.show').forEach(d => {
+                d.classList.remove('show');
+            });
+            
+            // Toggle del dropdown actual
+            if (!isOpen) {
+                // Calcular posición del botón para position fixed
+                const rect = trigger.getBoundingClientRect();
+                dropdown.style.top = (rect.bottom + 2) + 'px';
+                dropdown.style.left = (rect.right - 140) + 'px'; // 140px es el ancho mínimo del dropdown
+                
+                // Ajustar si se sale de la pantalla por la izquierda
+                if (rect.right - 140 < 0) {
+                    dropdown.style.left = rect.left + 'px';
+                }
+                
+                dropdown.classList.add('show');
+                
+                // Cerrar al hacer click fuera
+                setTimeout(() => {
+                    document.addEventListener('click', function closeDropdown(e) {
+                        if (!trigger.contains(e.target) && !dropdown.contains(e.target)) {
+                            dropdown.classList.remove('show');
+                            document.removeEventListener('click', closeDropdown);
+                        }
+                    });
+                }, 10);
             }
         }
     </script>
