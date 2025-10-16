@@ -7,125 +7,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="<?= base_url('assets/css/admin-ui.css') ?>">
     <style>
-        :root {
-            --accent: #b08c6a;
-            --accent-2: #a3c06b;
-            --muted: #6c6c6c;
-            --card-radius: 14px;
-            --shadow: 0 14px 36px rgba(11,11,11,0.06);
-            --bg-light: #fbf8f6;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Montserrat', system-ui, sans-serif;
-            background: var(--bg-light);
-            min-height: 100vh;
-            padding: 20px;
-            color: #222;
-        }
-
-        .navbar {
-            background: white;
-            padding: 15px 0;
-            margin-bottom: 20px;
-            border-radius: 14px;
-            box-shadow: var(--shadow);
-        }
-
-        .navbar-brand {
-            font-weight: 800;
-            font-size: 20px;
-            color: var(--accent);
-        }
-
-        .nav-link {
-            font-weight: 600;
-            color: var(--muted);
-            margin: 0 10px;
-            padding: 8px 16px;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            text-decoration: none;
-        }
-
-        .nav-link:hover {
-            background: var(--bg-light);
-            color: var(--accent);
-        }
-
-        .nav-link.active {
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
-            color: white !important;
-        }
-
-        .admin-header {
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 14px;
-            margin-bottom: 30px;
-            box-shadow: var(--shadow);
-        }
-
-        .admin-header h1 {
-            font-size: 28px;
-            font-weight: 800;
-            margin: 0 0 8px 0;
-        }
-
-        .admin-header p {
-            margin: 0;
-            opacity: 0.95;
-            font-size: 15px;
-        }
-
-        .card {
-            border: none;
-            border-radius: var(--card-radius);
-            box-shadow: var(--shadow);
-            background: white;
-            margin-bottom: 2rem;
-            overflow: hidden;
-        }
-
-        .card-header {
-            background: white;
-            border-bottom: 1px solid #f0f0f0;
-            padding: 1.25rem 1.5rem;
-            font-weight: 700;
-            font-size: 18px;
-            color: #333;
-        }
-
+        /* Cocina-specific styles */
         .list-group-item {
             border: none;
             border-bottom: 1px solid #e9ecef;
             padding: 1.25rem 1.5rem;
             cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .list-group-item:hover {
-            background: linear-gradient(135deg, rgba(176,140,106,0.05) 0%, rgba(163,192,107,0.05) 100%);
-            transform: translateX(8px);
         }
 
         .list-group-item:last-child {
             border-bottom: none;
-        }
-
-        .badge-custom {
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 0.85rem;
         }
 
         .btn-cocina {
@@ -133,14 +26,6 @@
             padding: 0.5rem 1rem;
             border-radius: 8px;
             font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            margin: 0 0.25rem;
-        }
-
-        .btn-cocina:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
 
         .btn-preparar {
@@ -151,24 +36,6 @@
         .btn-lista {
             background: linear-gradient(135deg, var(--accent-2) 0%, #8fb355 100%);
             color: white;
-        }
-
-        .table {
-            margin: 0;
-        }
-
-        .table thead th {
-            background: var(--bg-light);
-            border: none;
-            color: #333;
-            font-weight: 700;
-            padding: 1rem;
-        }
-
-        .table tbody td {
-            padding: 1rem;
-            vertical-align: middle;
-            border-color: #e9ecef;
         }
 
         .pedido-header {
@@ -182,17 +49,6 @@
             font-size: 1.5rem;
             font-weight: 700;
             color: var(--accent);
-        }
-
-        @media (max-width: 768px) {
-            .admin-header h1 {
-                font-size: 1.5rem;
-            }
-            
-            .btn-cocina {
-                padding: 0.4rem 0.8rem;
-                font-size: 0.85rem;
-            }
         }
     </style>
 </head>

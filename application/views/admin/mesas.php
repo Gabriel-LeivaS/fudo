@@ -6,101 +6,9 @@
     <title>Gestión de Mesas - Fudo</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="<?= base_url('assets/css/admin-ui.css') ?>">
     <style>
-        :root {
-            --accent: #b08c6a;
-            --accent-2: #a3c06b;
-            --muted: #6c6c6c;
-            --card-radius: 14px;
-            --shadow: 0 14px 36px rgba(11,11,11,0.06);
-            --bg-light: #fbf8f6;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { 
-            height: 100%; 
-            font-family: 'Montserrat', system-ui, sans-serif; 
-            color: #222; 
-            background: var(--bg-light);
-            padding: 20px;
-        }
-        
-        /* Navbar Superior */
-        .navbar {
-            background: white;
-            padding: 15px 0;
-            margin-bottom: 20px;
-            border-radius: 14px;
-            box-shadow: var(--shadow);
-        }
-        
-        .navbar-brand {
-            font-weight: 800;
-            font-size: 20px;
-            color: var(--accent);
-        }
-        
-        .nav-link {
-            font-weight: 600;
-            color: var(--muted);
-            margin: 0 10px;
-            padding: 8px 16px;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            white-space: nowrap; 
-        }
-        
-        .nav-link:hover {
-            background: var(--bg-light);
-            color: var(--accent);
-        }
-        
-        .nav-link.active {
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
-            color: white;
-            white-space: nowrap; 
-        }
-        
-        /* Admin Header */
-        .admin-header {
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 14px;
-            margin-bottom: 30px;
-            box-shadow: var(--shadow);
-        }
-        .admin-header h1 {
-            font-size: 28px;
-            font-weight: 800;
-            margin: 0 0 8px 0;
-        }
-        .admin-header p {
-            margin: 0;
-            opacity: 0.95;
-            font-size: 15px;
-        }
-        .card {
-            border: none;
-            box-shadow: var(--shadow);
-            border-radius: var(--card-radius);
-            background: white;
-            margin-bottom: 2rem;
-        }
-        .card-header {
-            background: white;
-            border-bottom: 1px solid #f0f0f0;
-            padding: 1.25rem 1.5rem;
-            border-radius: var(--card-radius) var(--card-radius) 0 0 !important;
-        }
-        .card-header h5 {
-            font-weight: 700;
-            font-size: 18px;
-            margin: 0;
-            color: #333;
-        }
-        
-        /* Mesa Cards */
+        /* Mesa-specific styles */
         .mesa-card {
             border: 2px solid #e9ecef;
             border-radius: 12px;
@@ -151,16 +59,6 @@
             color: white;
         }
         
-        .btn-action {
-            padding: 8px 16px;
-            font-size: 14px;
-            font-weight: 600;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            border: none;
-            margin: 5px;
-        }
-        
         .btn-delete {
             background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
             color: white;
@@ -194,17 +92,6 @@
             color: white;
         }
         
-        .btn-success {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            color: white;
-        }
-        
-        .btn-success:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(40,167,69,0.4);
-            color: white;
-        }
-        
         .btn-add-mesa {
             background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
             color: white;
@@ -221,57 +108,7 @@
             color: white;
         }
         
-        /* Estilos de Modal */
-        .modal-content {
-            border: none;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-        }
-        
-        .modal-header {
-            border-bottom: none;
-            padding: 1.5rem 2rem;
-        }
-        
-        .modal-body {
-            padding: 2rem;
-        }
-        
-        .modal-footer {
-            border-top: 1px solid #f0f0f0;
-            padding: 1.25rem 2rem;
-        }
-        
-        .modal-footer .btn-secondary {
-            background: #6c757d;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: 600;
-        }
-        
-        .modal-footer .btn-secondary:hover {
-            background: #5a6268;
-        }
-        
-        .form-control, .form-select {
-            border: 2px solid #e9ecef;
-            padding: 12px;
-            border-radius: 8px;
-            transition: border-color 0.3s ease;
-        }
-        
-        .form-control:focus, .form-select:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 0.2rem rgba(176,140,106,0.25);
-        }
-        
-        .form-label {
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 8px;
-        }
-        
-        /* Estilos para Toast Notificaciones */
+        /* Toast styles */
         .toast {
             min-width: 300px;
             border-radius: 12px;
@@ -288,22 +125,7 @@
             margin-right: 8px;
         }
         
-        /* Modal de confirmación */
-        #confirmButton {
-            border: none;
-            transition: all 0.3s ease;
-        }
-        
-        #confirmButton:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0,0,0,0.3);
-        }
-        
-        #confirmMessage {
-            line-height: 1.6;
-        }
-        
-        /* Buscador */
+        /* Search box */
         .search-box {
             position: relative;
         }
@@ -320,25 +142,6 @@
             border-color: var(--accent);
             box-shadow: 0 0 0 0.2rem rgba(176,140,106,0.25);
             outline: none;
-        }
-        
-        .form-select {
-            border: 2px solid #e9ecef;
-            border-radius: 10px;
-            padding: 12px 16px;
-            font-size: 15px;
-            transition: all 0.3s ease;
-        }
-        
-        .form-select:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 0.2rem rgba(176,140,106,0.25);
-        }
-        
-        @media (max-width: 768px) {
-            .admin-header h1 {
-                font-size: 1.5rem;
-            }
         }
     </style>
 </head>

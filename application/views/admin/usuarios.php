@@ -6,223 +6,8 @@
     <title>👥 Gestión de Usuarios - Panel FUDO</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="<?= base_url('assets/css/admin-ui.css') ?>">
     <style>
-        :root {
-            --accent: #b08c6a;
-            --accent-2: #a3c06b;
-            --muted: #6c6c6c;
-            --bg-light: #fbf8f6;
-        }
-
-        * {
-            font-family: 'Montserrat', sans-serif;
-        }
-
-        body {
-            background: var(--bg-light);
-            padding: 20px;
-        }
-
-        .admin-header {
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 14px;
-            margin-bottom: 30px;
-            box-shadow: 0 14px 36px rgba(11,11,11,0.06);
-        }
-
-        .admin-header h1 {
-            font-size: 28px;
-            font-weight: 800;
-            margin: 0 0 8px 0;
-        }
-
-        .admin-header p {
-            margin: 0;
-            opacity: 0.95;
-            font-size: 15px;
-        }
-
-        .card {
-            border: none;
-            border-radius: 14px;
-            box-shadow: 0 14px 36px rgba(11,11,11,0.06);
-        }
-
-        .card-body {
-            padding: 25px;
-        }
-
-        .btn-action {
-            padding: 0.5rem 0.9rem;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
-            border: none;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(176, 140, 106, 0.3);
-        }
-
-        .btn-success {
-            background: #28a745;
-            border: none;
-        }
-
-        .btn-danger {
-            background: #dc3545;
-            border: none;
-        }
-
-        .btn-warning {
-            background: #ffc107;
-            border: none;
-            color: #333;
-        }
-
-        .table {
-            margin-top: 20px;
-        }
-
-        .table th {
-            font-weight: 700;
-            font-size: 13px;
-            text-transform: uppercase;
-            color: var(--muted);
-            border-bottom: 2px solid #dee2e6;
-        }
-
-        .table td {
-            vertical-align: middle;
-            font-size: 14px;
-        }
-
-        .badge {
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 12px;
-        }
-
-        .badge.bg-success {
-            background: #d4edda !important;
-            color: #155724;
-        }
-
-        .badge.bg-danger {
-            background: #f8d7da !important;
-            color: #721c24;
-        }
-
-        .badge.bg-primary {
-            background: #d1ecf1 !important;
-            color: #0c5460;
-        }
-
-        .badge.bg-warning {
-            background: #fff3cd !important;
-            color: #856404;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-        }
-
-        .modal-content {
-            border-radius: 14px;
-            border: none;
-        }
-
-        .modal-header {
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
-            color: white;
-            border-radius: 14px 14px 0 0;
-            padding: 20px 25px;
-        }
-
-        .modal-header h5 {
-            font-weight: 700;
-            margin: 0;
-        }
-
-        .modal-header .btn-close {
-            filter: brightness(0) invert(1);
-        }
-
-        .modal-body {
-            padding: 25px;
-        }
-
-        .form-label {
-            font-weight: 600;
-            font-size: 14px;
-            color: #333;
-            margin-bottom: 8px;
-        }
-
-        .form-control, .form-select {
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            padding: 10px 14px;
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
-
-        .form-control:focus, .form-select:focus {
-            border-color: var(--accent-2);
-            box-shadow: 0 0 0 0.2rem rgba(163, 192, 107, 0.15);
-        }
-
-        .alert {
-            border-radius: 10px;
-            border: none;
-            font-weight: 600;
-        }
-
-        .navbar {
-            background: white;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            padding: 15px 20px;
-            border-radius: 14px;
-            margin-bottom: 30px;
-        }
-
-        .navbar-brand {
-            font-weight: 800;
-            font-size: 20px;
-            color: var(--accent);
-        }
-
-        .nav-link {
-            font-weight: 600;
-            color: var(--muted);
-            margin: 0 10px;
-            padding: 8px 16px;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            white-space: nowrap; 
-        }
-
-        .nav-link:hover {
-            background: var(--bg-light);
-            color: var(--accent);
-        }
-
-        .nav-link.active {
-        background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
-        color: white;
-        }
-
         .filters {
             display: flex;
             gap: 15px;
@@ -261,6 +46,26 @@
             font-weight: 700;
             font-size: 16px;
         }
+        
+        .badge.bg-success {
+            background: #d4edda !important;
+            color: #155724;
+        }
+
+        .badge.bg-danger {
+            background: #f8d7da !important;
+            color: #721c24;
+        }
+
+        .badge.bg-primary {
+            background: #d1ecf1 !important;
+            color: #0c5460;
+        }
+
+        .badge.bg-warning {
+            background: #fff3cd !important;
+            color: #856404;
+        }
     </style>
 </head>
 <body>
@@ -294,7 +99,7 @@
                 ?>
                 
                 <?php if($tiene_permiso('pedidos')): ?>
-                    <a href="<?= site_url('admin') ?>" class="nav-link">� Pedidos</a>
+                    <a href="<?= site_url('admin') ?>" class="nav-link">📦 Pedidos</a>
                 <?php endif; ?>
                 
                 <?php if($tiene_permiso('categorias')): ?>
