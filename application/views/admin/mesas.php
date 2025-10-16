@@ -550,6 +550,49 @@
         </div>
     </div>
 
+    <!-- Modal QR -->
+    <div class="modal fade" id="modalQR" tabindex="-1" aria-labelledby="modalQRLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%); color: white;">
+                    <h5 class="modal-title" id="modalQRLabel">
+                        📱 Código QR - <span id="qrMesaNombre"></span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center" style="padding: 2rem;">
+                    <div id="qrContainer">
+                        <div id="qrLoading" class="d-flex flex-column align-items-center">
+                            <div class="spinner-border text-primary mb-3" role="status">
+                                <span class="visually-hidden">Generando QR...</span>
+                            </div>
+                            <p class="text-muted">Generando código QR...</p>
+                        </div>
+                        <div id="qrContent" style="display: none;">
+                            <img id="qrImage" src="" alt="Código QR" class="img-fluid mb-3" style="max-width: 300px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                            <div class="alert alert-info" style="background: linear-gradient(135deg, rgba(176,140,106,0.1) 0%, rgba(163,192,107,0.1) 100%); border: 1px solid var(--accent); border-radius: 10px;">
+                                <strong>📋 Instrucciones:</strong><br>
+                                Los clientes pueden escanear este código QR para acceder directamente al menú de esta mesa.
+                            </div>
+                        </div>
+                        <div id="qrError" style="display: none;">
+                            <div class="alert alert-danger" style="border-radius: 10px;">
+                                <strong>❌ Error:</strong><br>
+                                <span id="qrErrorMessage"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-qr" id="btnDescargarQR" style="display: none;" onclick="descargarQR()">
+                        💾 Descargar QR
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal de Confirmación -->
     <div class="modal fade" id="modalConfirmacion" tabindex="-1" aria-labelledby="modalConfirmacionLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -740,25 +783,65 @@
             }
         }
         
+        let qrImagePath = '';
+        
         async function generarQR(id) {
+            // Obtener nombre de la mesa
+            const mesaCard = document.querySelector(`button[onclick="generarQR(${id})"]`).closest('.mesa-card');
+            const mesaNombre = mesaCard.querySelector('.mesa-nombre').textContent;
+            
+            // Configurar modal
+            document.getElementById('qrMesaNombre').textContent = mesaNombre;
+            document.getElementById('qrLoading').style.display = 'block';
+            document.getElementById('qrContent').style.display = 'none';
+            document.getElementById('qrError').style.display = 'none';
+            document.getElementById('btnDescargarQR').style.display = 'none';
+            
+            // Mostrar modal
+            const modal = new bootstrap.Modal(document.getElementById('modalQR'));
+            modal.show();
+            
             try {
                 const response = await fetch('<?= site_url('mesas/generar_qr/') ?>' + id, {
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 });
                 const result = await response.json();
                 
+                // Ocultar loading
+                document.getElementById('qrLoading').style.display = 'none';
+                
                 if(result.success) {
+                    // Mostrar QR
+                    qrImagePath = result.path;
+                    document.getElementById('qrImage').src = '<?= base_url() ?>' + result.path + '?t=' + Date.now();
+                    document.getElementById('qrContent').style.display = 'block';
+                    document.getElementById('btnDescargarQR').style.display = 'inline-block';
+                    
                     mostrarToast('QR generado exitosamente', 'success');
-                    // Opcional: abrir el QR en una nueva ventana
-                    setTimeout(() => {
-                        window.open('<?= base_url() ?>' + result.path, '_blank');
-                    }, 500);
                 } else {
+                    // Mostrar error
+                    document.getElementById('qrErrorMessage').textContent = result.message;
+                    document.getElementById('qrError').style.display = 'block';
                     mostrarToast('Error: ' + result.message, 'error');
                 }
             } catch(error) {
                 console.error('Error:', error);
+                document.getElementById('qrLoading').style.display = 'none';
+                document.getElementById('qrErrorMessage').textContent = 'Error de conexión al generar el QR';
+                document.getElementById('qrError').style.display = 'block';
                 mostrarToast('Error al generar QR', 'error');
+            }
+        }
+        
+        function descargarQR() {
+            if(qrImagePath) {
+                const link = document.createElement('a');
+                link.href = '<?= base_url() ?>' + qrImagePath;
+                link.download = 'qr_' + document.getElementById('qrMesaNombre').textContent.replace(/\s+/g, '_').toLowerCase() + '.png';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                mostrarToast('QR descargado exitosamente', 'success');
             }
         }
         
