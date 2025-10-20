@@ -469,64 +469,6 @@ body {
         position: relative;
     }
     
-    /* Botón de acciones móviles */
-    .mobile-action-trigger {
-        background: var(--accent);
-        color: white;
-        border: none;
-        padding: 8px 12px;
-        border-radius: 6px;
-        font-size: 12px;
-        cursor: pointer;
-        font-weight: 500;
-        transition: all 0.2s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-    }
-    
-    .mobile-action-trigger:hover {
-        background: var(--accent-2);
-    }
-    
-    /* Menu desplegable */
-    .mobile-actions-dropdown {
-        position: fixed;
-        background: white;
-        border: 1px solid rgba(0,0,0,0.1);
-        border-radius: 8px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-        z-index: 9999;
-        min-width: 140px;
-        display: none;
-        padding: 4px;
-        margin-top: 2px;
-    }
-    
-    .mobile-actions-dropdown.show {
-        display: block;
-    }
-    
-    .mobile-actions-dropdown .btn {
-        width: 100%;
-        text-align: left;
-        margin: 1px 0;
-        padding: 8px 12px;
-        font-size: 11px;
-        border-radius: 4px;
-        border: none;
-        background: transparent;
-        color: var(--muted);
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-    
-    .mobile-actions-dropdown .btn:hover {
-        background: var(--bg-light);
-        color: var(--accent);
-    }
 }
 
 @media (max-width: 991px) {
@@ -756,9 +698,10 @@ body {
     }
     
     .btn-action {
-        width: 100%;
-        margin-bottom: 8px;
+        width: auto;
+        margin-bottom: 0;
         font-size: 0.9rem;
+        padding: 8px 12px;
     }
     
     .form-control, .form-select {
@@ -771,12 +714,15 @@ body {
     }
     
     .action-buttons {
-        flex-direction: column;
-        gap: 8px;
+        flex-direction: row;
+        gap: 4px;
+        justify-content: center;
+        flex-wrap: wrap;
     }
     
     .action-buttons .btn {
-        width: 100%;
+        flex: 0 0 auto;
+        min-width: 40px;
     }
     
     .row.mb-4 {
